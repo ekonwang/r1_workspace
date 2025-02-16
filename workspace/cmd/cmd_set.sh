@@ -8,7 +8,7 @@ git_all() {
 }
 
 gpul() {
-	git pull origin dev
+	git pull origin master
 }
 
 ifs(){
