@@ -1,0 +1,6 @@
+[submodule "R1-V"]
+	path = R1-V
+	url = https://github.com/Deep-Agent/R1-V.git
+[submodule "TinyZero"]
+	path = TinyZero
+	url = https://github.com/Jiayi-Pan/TinyZero.git
