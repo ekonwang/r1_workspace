@@ -5,6 +5,7 @@ import sys
 import re
 from datasets import load_dataset
 from datetime import datetime
+from utils import load_jsonl, save_jsonl, print_error
 # set up the agent
 # MAX_REPLY = 10
 # llm_config={"cache_seed": None, "config_list": [{"model": "Qwen/Qwen2-VL-72B-Instruct", "temperature": 0.0, "api_key": "sk-wykivevwxqqrfihqaeuiqyexnzzugnvaorzmjxtfcghzrvox", "base_url": "https://api.siliconflow.cn/v1"}]}
@@ -26,14 +27,10 @@ def chat_gpt4o(prompt: str, history_messages = None):
     response = client.create(
         messages=dirty_messages,
         temperature=0.8,
+        max_tokens=16384
     )
     messages = clean_messages + [{"role": "assistant", "content": response.choices[0].message.content}]
     return response.choices[0].message.content, messages
-
-
-def print_error(message):
-    message = f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {message}'
-    print(f"\033[91m\033[1m{message}\033[0m")
 
 
 # reply, messages = chat_gpt4o("Could you please give me a list of all the countries in the world?")
@@ -68,12 +65,24 @@ Here is a problem from AIME, please solve the problem step by step. You need to 
     return {'flag': 1, 'reply': reply, 'prompt': prompt, "answer": answer}
 
 
-def eval_dataset(dataset, verbose: bool = False):
+def eval_dataset(dataset, output_path, verbose: bool = False):
     tot_acc = 0
     tot_eval = 0
+    all_eval_data = {}
+
+    if os.path.exists(output_path):
+        all_eval_data = load_jsonl(output_path)
+        all_eval_data = {element['id']: elment}
+
     for element_id in range(len(dataset)):
         element = dataset[element_id]
+        eid = element['ID']
+
+        if eid in all_eval_data:
+            print_error(f'{eid} already inference, skip.')
+
         eval_dict = _eval_aime_(element)
+        eval_dict['id'] = eid
         tot_acc += eval_dict['flag']
         tot_eval += 1
         if verbose:
@@ -84,10 +93,14 @@ def eval_dataset(dataset, verbose: bool = False):
             print(f"Answer: {eval_dict['reply']}")
             print(">" * 20)
             print(f"Ground Truth: {eval_dict['answer']}")
+            print(f'{tot_acc / tot_eval * 100:.2f} ({tot_acc:6d}/{tot_eval:6d})')
+        
+        # all_eval_data.append(eval_dict)
+        all_eval_data[eid] = eval_dict
+        save_jsonl(list(all_eval_data.values()), output_path)
 
     return tot_acc / tot_eval
             
 
 dataset = load_dataset("di-zhang-fdu/AIME_1983_2024")['train']
-
-eval_dataset(dataset, True)
+eval_dataset(dataset, '.temp/outputs/AIME/DeepSeek-R1-Distill-Qwen-7B.jsonl',  True)
