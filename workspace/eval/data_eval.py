@@ -81,7 +81,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
 
     if os.path.exists(output_path):
         all_eval_data = load_jsonl(output_path)
-        all_eval_data = {element['id']: elment for element in all_eval_data}
+        all_eval_data = {element['id']: element for element in all_eval_data}
 
     for element_id in range(len(dataset)):
         element = dataset[element_id]
