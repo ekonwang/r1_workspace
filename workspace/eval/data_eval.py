@@ -18,20 +18,29 @@ from autogen.agentchat.contrib.img_utils import (
 from autogen.oai.client import OpenAIWrapper
 
 
-def chat_gpt4o(prompt: str, history_messages = None):
-    if history_messages is None:
-        history_messages = []
-    clean_messages = history_messages + [{"role": "user", "content":  prompt}]
-    dirty_messages = [{'role': mdict['role'], 'content': gpt4v_formatter(mdict['content'])} for mdict in clean_messages]
-    client = OpenAIWrapper(**llm_config)
-    response = client.create(
-        messages=dirty_messages,
-        temperature=0.8,
-        max_tokens=16384
-    )
-    messages = clean_messages + [{"role": "assistant", "content": response.choices[0].message.content}]
-    return response.choices[0].message.content, messages
-
+def chat_vlm(prompt: str, history_messages = None, retry_times: int = 10):
+    interval = 1
+    for i in range(retry_times):
+        try:
+            if history_messages is None:
+                history_messages = []
+            clean_messages = history_messages + [{"role": "user", "content":  prompt}]
+            dirty_messages = [{'role': mdict['role'], 'content': gpt4v_formatter(mdict['content'])} for mdict in clean_messages]
+            
+            client = OpenAIWrapper(**call_config)
+            response = client.create(
+                messages=dirty_messages,
+                timeout=600,
+            )
+            messages = clean_messages + [{"role": "assistant", "content": response.choices[0].message.content}]
+            return response.choices[0].message.content, messages
+        except Exception as e:
+            if 'limit' in str(e):
+                sleep(interval)
+                interval = min(interval * 2, 60)
+            print_error(e)
+            if i >= (retry_times - 1):
+                raise e
 
 # reply, messages = chat_gpt4o("Could you please give me a list of all the countries in the world?")
 # print(reply)
@@ -72,7 +81,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
 
     if os.path.exists(output_path):
         all_eval_data = load_jsonl(output_path)
-        all_eval_data = {element['id']: elment}
+        all_eval_data = {element['id']: elment for element in all_eval_data}
 
     for element_id in range(len(dataset)):
         element = dataset[element_id]
@@ -81,7 +90,13 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
         if eid in all_eval_data:
             print_error(f'{eid} already inference, skip.')
 
-        eval_dict = _eval_aime_(element)
+        try:
+            eval_dict = _eval_aime_(element)
+        except Exception as err:
+            if 'keyboard' in str(err).lower():
+                raise err 
+            print_error(err)
+
         eval_dict['id'] = eid
         tot_acc += eval_dict['flag']
         tot_eval += 1
