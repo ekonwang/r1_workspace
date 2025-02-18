@@ -27,7 +27,7 @@ def chat_vlm(prompt: str, history_messages = None, retry_times: int = 10):
             clean_messages = history_messages + [{"role": "user", "content":  prompt}]
             dirty_messages = [{'role': mdict['role'], 'content': gpt4v_formatter(mdict['content'])} for mdict in clean_messages]
             
-            client = OpenAIWrapper(**call_config)
+            client = OpenAIWrapper(**llm_config)
             response = client.create(
                 messages=dirty_messages,
                 timeout=600,
@@ -45,7 +45,7 @@ def chat_vlm(prompt: str, history_messages = None, retry_times: int = 10):
 # reply, messages = chat_gpt4o("Could you please give me a list of all the countries in the world?")
 # print(reply)
 def eval_question(question: str):
-    reply, messages = chat_gpt4o(question)
+    reply, messages = chat_vlm(question)
     return reply
 
 
@@ -115,7 +115,6 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
         save_jsonl(list(all_eval_data.values()), output_path)
 
     return tot_acc / tot_eval
-            
 
 dataset = load_dataset("di-zhang-fdu/AIME_1983_2024")['train']
 eval_dataset(dataset, '.temp/outputs/AIME/DeepSeek-R1-Distill-Qwen-7B.jsonl',  True)
