@@ -6,11 +6,16 @@ import re
 from datasets import load_dataset
 from datetime import datetime
 from utils import load_jsonl, save_jsonl, print_error, mk_len_pbar
+from time import sleep
+
 # set up the agent
 # MAX_REPLY = 10
 # llm_config={"cache_seed": None, "config_list": [{"model": "Qwen/Qwen2-VL-72B-Instruct", "temperature": 0.0, "api_key": "sk-wykivevwxqqrfihqaeuiqyexnzzugnvaorzmjxtfcghzrvox", "base_url": "https://api.siliconflow.cn/v1"}]}
 
 llm_config={"cache_seed": None, "config_list": [{"model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", "temperature": 0.0, "api_key": "sk-gjezftinzvhzoogekwilcnydixgooycpezqemudmnttqbycj", "base_url": "https://api.siliconflow.cn/v1"}]}
+
+def _generate_model_name(model_name: str):
+    return model_name.replace("/", "_")
 
 from autogen.agentchat.contrib.img_utils import (
     gpt4v_formatter,
@@ -83,7 +88,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
         all_eval_data = load_jsonl(output_path)
         all_eval_data = {element['id']: element for element in all_eval_data}
 
-    pbar = mk_len_pbar(len(dataset), 'Evaluating')
+    pbar = mk_len_pbar(len(dataset), desc='Evaluating')
 
     for element_id in range(len(dataset)):
         element = dataset[element_id]
@@ -121,4 +126,4 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
     return tot_acc / tot_eval
 
 dataset = load_dataset("di-zhang-fdu/AIME_1983_2024")['train']
-eval_dataset(dataset, '.temp/outputs/AIME/DeepSeek-R1-Distill-Qwen-7B.jsonl',  True)
+eval_dataset(dataset, f'.temp/outputs/AIME/{_generate_model_name(llm_config["config_list"][0]["model"])}.jsonl',  True)
