@@ -2,6 +2,10 @@ import json
 import os, sys
 from tqdm import tqdm
 from datetime import datetime
+from uuid import uuid4
+import time
+from concurrent.futures import ThreadPoolExecutor
+from rich.progress import track, Progress
 
 
 def mk_pbar(iterable, ncols=80, **kwargs):
@@ -11,8 +15,17 @@ def mk_pbar(iterable, ncols=80, **kwargs):
     return tqdm(iterable, ncols=ncols, **kwargs)
 
 
-def mk_len_pbar(ncols=80, **kwargs):
-    return tqdm(ncols=ncols, **kwargs)
+# def mk_len_pbar(ncols=80, **kwargs):
+def mk_len_pbar(iterable, func, **kwargs):
+    # use rich progress bar
+    # return track(list(range(total)), **kwargs)
+    with Progress(**kwargs) as progress:
+        # Create a task with an initial description
+        task_id = progress.add_task("[red]Processing...", total=len(iterable))
+        for i, elem in enumerate(iterable):
+            results = func(elem)
+            progress.update(task_id, advance=1)
+            yield results
 
 
 def generate_uuid():
@@ -73,5 +86,28 @@ def json_print(data):
 
 
 def multithreading(func, thread_num=8, data=None):
-    with concurrent.futures.ThreadPoolExecutor(max_workers=thread_num) as executor:
+    with ThreadPoolExecutor(max_workers=thread_num) as executor:
         executor.map(func, data)
+    
+if __name__ == '__main__':
+    # pbar = mk_len_pbar(total=100, description='test')
+    # for i in range(100):
+    #     next(pbar)
+    #     pbar.description = f'test: {i}'
+    #     # pbar.set_description(f'test: {i}')
+    #     # pbar.track(description=f'test: {i}')
+    #     time.sleep(0.1)
+
+    from rich.progress import Progress
+    import time
+
+    with Progress() as progress:
+        # Create a task with an initial description
+        task_id = progress.add_task("[red]Processing...", total=100)
+
+        for i in range(100):
+            time.sleep(0.05)  # Simulate work
+            if i == 50:
+                # Update the description halfway
+                progress.update(task_id, description="[green]Halfway done!")
+            progress.update(task_id, advance=1)
