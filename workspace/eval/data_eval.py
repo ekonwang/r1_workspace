@@ -5,7 +5,7 @@ import sys
 import re
 from datasets import load_dataset
 from datetime import datetime
-from utils import load_jsonl, save_jsonl, print_error
+from utils import load_jsonl, save_jsonl, print_error, mk_len_pbar
 # set up the agent
 # MAX_REPLY = 10
 # llm_config={"cache_seed": None, "config_list": [{"model": "Qwen/Qwen2-VL-72B-Instruct", "temperature": 0.0, "api_key": "sk-wykivevwxqqrfihqaeuiqyexnzzugnvaorzmjxtfcghzrvox", "base_url": "https://api.siliconflow.cn/v1"}]}
@@ -83,6 +83,8 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
         all_eval_data = load_jsonl(output_path)
         all_eval_data = {element['id']: element for element in all_eval_data}
 
+    pbar = mk_len_pbar(len(dataset), 'Evaluating')
+
     for element_id in range(len(dataset)):
         element = dataset[element_id]
         eid = element['ID']
@@ -96,23 +98,25 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
             if 'keyboard' in str(err).lower():
                 raise err 
             print_error(err)
-
-        eval_dict['id'] = eid
-        tot_acc += eval_dict['flag']
-        tot_eval += 1
-        if verbose:
-            print(f"\n" * 3)
-            print("=" * 40)
-            print(f"Question: {eval_dict['prompt']}")
-            print(">" * 20)
-            print(f"Answer: {eval_dict['reply']}")
-            print(">" * 20)
-            print(f"Ground Truth: {eval_dict['answer']}")
-            print(f'{tot_acc / tot_eval * 100:.2f} ({tot_acc:6d}/{tot_eval:6d})')
+        else:
+            eval_dict['id'] = eid
+            tot_acc += eval_dict['flag']
+            tot_eval += 1
+            if verbose:
+                print(f"\n" * 3)
+                print("=" * 40)
+                print(f"Question: {eval_dict['prompt']}")
+                print(">" * 20)
+                print(f"Answer: {eval_dict['reply']}")
+                print(">" * 20)
+                print(f"Ground Truth: {eval_dict['answer']}")
+            
+            # all_eval_data.append(eval_dict)
+            all_eval_data[eid] = eval_dict
+            save_jsonl(list(all_eval_data.values()), output_path, use_tqdm=False)
         
-        # all_eval_data.append(eval_dict)
-        all_eval_data[eid] = eval_dict
-        save_jsonl(list(all_eval_data.values()), output_path)
+        pbar.update(1)
+        pbar.set_description(f'Evaluating: {tot_acc / tot_eval * 100:.2f} ({tot_acc:6d}/{tot_eval:6d})')
 
     return tot_acc / tot_eval
 
