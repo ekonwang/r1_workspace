@@ -8,45 +8,13 @@ from datetime import datetime
 from utils import load_jsonl, save_jsonl, print_error, mk_len_pbar
 from time import sleep
 from rich.progress import track, Progress
-
+from utils import llm_config, chat_vlm
 # set up the agent
 # MAX_REPLY = 10
 # llm_config={"cache_seed": None, "config_list": [{"model": "Qwen/Qwen2-VL-72B-Instruct", "temperature": 0.0, "api_key": "sk-wykivevwxqqrfihqaeuiqyexnzzugnvaorzmjxtfcghzrvox", "base_url": "https://api.siliconflow.cn/v1"}]}
 
-llm_config={"cache_seed": None, "config_list": [{"model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", "temperature": 0.0, "api_key": "sk-gjezftinzvhzoogekwilcnydixgooycpezqemudmnttqbycj", "base_url": "https://api.siliconflow.cn/v1"}]}
-
 def _generate_model_name(model_name: str):
     return model_name.replace("/", "_")
-
-from autogen.agentchat.contrib.img_utils import (
-    gpt4v_formatter,
-)
-from autogen.oai.client import OpenAIWrapper
-
-
-def chat_vlm(prompt: str, history_messages = None, retry_times: int = 10):
-    interval = 1
-    for i in range(retry_times):
-        try:
-            if history_messages is None:
-                history_messages = []
-            clean_messages = history_messages + [{"role": "user", "content":  prompt}]
-            dirty_messages = [{'role': mdict['role'], 'content': gpt4v_formatter(mdict['content'])} for mdict in clean_messages]
-            
-            client = OpenAIWrapper(**llm_config)
-            response = client.create(
-                messages=dirty_messages,
-                timeout=600,
-            )
-            messages = clean_messages + [{"role": "assistant", "content": response.choices[0].message.content}]
-            return response.choices[0].message.content, messages
-        except Exception as e:
-            if 'limit' in str(e):
-                sleep(interval)
-                interval = min(interval * 2, 60)
-            print_error(e)
-            if i >= (retry_times - 1):
-                raise e
 
 # reply, messages = chat_gpt4o("Could you please give me a list of all the countries in the world?")
 # print(reply)
