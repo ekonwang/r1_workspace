@@ -48,7 +48,7 @@ def parse_args():
  
  
 def matrix_multiplication(args):
-    print_error(f"进入 【OCCPY】 模式")
+    print_error(f"进入 【OCCUPY】 模式")
     while True:
         a_list, b_list, result = [], [], []    
         size = (args.size, args.size)
