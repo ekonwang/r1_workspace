@@ -64,7 +64,7 @@ def matrix_multiplication(args):
  
  
 if __name__ == "__main__":
-    # usage: python occupy.py --size 55000 --gpus 4 --interval 0.03 --threshold 24
+    # usage: python demo_occupy.py --size 55000 --gpus 4 --interval 0.03 --threshold 24
     args = parse_args()
 
     while True:
