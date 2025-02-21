@@ -6,6 +6,40 @@ from uuid import uuid4
 import time
 from concurrent.futures import ThreadPoolExecutor
 from rich.progress import track, Progress
+from time import sleep
+
+# llm_config={"cache_seed": None, "config_list": [{"model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", "temperature": 0.0, "api_key": "sk-gjezftinzvhzoogekwilcnydixgooycpezqemudmnttqbycj", "base_url": "https://api.siliconflow.cn/v1"}]}
+llm_config={"cache_seed": None, "config_list": [{"model": "Pro/deepseek-ai/DeepSeek-V3", "temperature": 0.0, "api_key": "sk-gjezftinzvhzoogekwilcnydixgooycpezqemudmnttqbycj", "base_url": "https://api.siliconflow.cn/v1"}]}
+
+from autogen.agentchat.contrib.img_utils import (
+    gpt4v_formatter,
+)
+from autogen.oai.client import OpenAIWrapper
+
+
+def chat_vlm(prompt: str, history_messages = None, retry_times: int = 10):
+    interval = 1
+    for i in range(retry_times):
+        try:
+            if history_messages is None:
+                history_messages = []
+            clean_messages = history_messages + [{"role": "user", "content":  prompt}]
+            dirty_messages = [{'role': mdict['role'], 'content': gpt4v_formatter(mdict['content'])} for mdict in clean_messages]
+            
+            client = OpenAIWrapper(**llm_config)
+            response = client.create(
+                messages=dirty_messages,
+                timeout=600,
+            )
+            messages = clean_messages + [{"role": "assistant", "content": response.choices[0].message.content}]
+            return response.choices[0].message.content, messages
+        except Exception as e:
+            if 'limit' in str(e):
+                sleep(interval)
+                interval = min(interval * 2, 60)
+            print_error(e)
+            if i >= (retry_times - 1):
+                raise e
 
 
 def mk_pbar(iterable, ncols=80, **kwargs):

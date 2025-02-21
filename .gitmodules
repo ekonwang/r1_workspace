@@ -4,3 +4,6 @@
 [submodule "TinyZero"]
 	path = TinyZero
 	url = https://github.com/Jiayi-Pan/TinyZero.git
+[submodule "LLM-RLHF-Tuning-with-PPO-and-DPO"]
+	path = LLM-RLHF-Tuning-with-PPO-and-DPO
+	url = git@github.com:raghavc/LLM-RLHF-Tuning-with-PPO-and-DPO.git
