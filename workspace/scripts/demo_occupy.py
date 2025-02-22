@@ -77,7 +77,7 @@ if __name__ == "__main__":
                 matrix_multiplication(args)
         except Exception as err:
             print_error(err)
-            # Stay in loop until interrupt from the user.
+            # Stay in loop until interrupt from the user...
             if 'keyboard' in str(err).lower():
                 break
             time.sleep(5)
