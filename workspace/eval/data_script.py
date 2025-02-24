@@ -14,7 +14,8 @@ from huggingface_hub import snapshot_download
 # model_name = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
 # model_name = "Qwen/Qwen2.5-3B"
 # model_name = "Qwen/Qwen2.5-3B-Instruct"
-model_name = "Qwen/Qwen2-VL-2B-Instruct"
+model_name = "HuanjinYao/Mulberry_qwen2vl_7b"
+# model_name = "Qwen/Qwen2-VL-2B-Instruct"
 local_model_name = model_name.replace("/", "_")
 
 model_path = snapshot_download(

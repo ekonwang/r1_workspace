@@ -7,3 +7,12 @@
 [submodule "LLM-RLHF-Tuning-with-PPO-and-DPO"]
 	path = LLM-RLHF-Tuning-with-PPO-and-DPO
 	url = git@github.com:raghavc/LLM-RLHF-Tuning-with-PPO-and-DPO.git
+[submodule "LLaMA-Factory"]
+	path = LLaMA-Factory
+	url = https://github.com/hiyouga/LLaMA-Factory.git
+[submodule "Mulberry"]
+	path = Mulberry
+	url = https://github.com/HJYao00/Mulberry.git
+[submodule "VLMEvalKit"]
+	path = VLMEvalKit
+	url = https://github.com/open-compass/VLMEvalKit.git
