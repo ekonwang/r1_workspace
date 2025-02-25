@@ -9,6 +9,9 @@ import subprocess
 
 from utils import print_error
 
+GLOBAL_DAEMON=0
+DAEMON_INTERVAL=30
+
 
 def check_gpu_memory_already_occupied(threshold=32):
     assert threshold > 0
@@ -43,11 +46,15 @@ def parse_args():
     parser.add_argument('--size', help='matrix size', default=70000, type=int)
     parser.add_argument('--interval', help='sleep interval', default=0.0001, type=float)
     parser.add_argument('--threshold', type=int, help='memory threshold for occupying', default=0)
+    parser.add_argument('--daemon_interval', type=float, default=30)
     args = parser.parse_args()
     return args
  
  
 def matrix_multiplication(args):
+    global GLOBAL_DAEMON
+    GLOBAL_DAEMON=0
+
     print_error(f"进入【OCCUPY】 模式")
     while True:
         a_list, b_list, result = [], [], []    
@@ -65,19 +72,28 @@ def matrix_multiplication(args):
  
 if __name__ == "__main__":
     # usage: python demo_occupy.py --size 55000 --gpus 4 --interval 0.03 --threshold 24
+    # usage: python demo_occupy.py --size 55000 --gpus 4 --interval 0.05 --threshold 24000 --daemon_interval 0.1 
     args = parse_args()
+    DAEMON_INTERVAL = args.daemon_interval
 
     while True:
         try:
             if args.threshold > 0:
                 while(check_gpu_memory_already_occupied(args.threshold)):
-                    time.sleep(5)
+                    time.sleep(DAEMON_INTERVAL)
+                
+                print_error(f'Global deamon strategy: {GLOBAL_DAEMON}')
+                GLOBAL_DAEMON = GLOBAL_DAEMON + 1
+                time.sleep(DAEMON_INTERVAL)
+                if GLOBAL_DAEMON < 10:
+                    continue
                 matrix_multiplication(args)
             else:
                 matrix_multiplication(args)
         except Exception as err:
             print_error(err)
+            raise err
             # Stay in loop until interrupt from the user...
             if 'keyboard' in str(err).lower():
                 break
-            time.sleep(5)
+            time.sleep(DAEMON_INTERVAL)
