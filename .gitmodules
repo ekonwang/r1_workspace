@@ -16,3 +16,6 @@
 [submodule "VLMEvalKit"]
 	path = VLMEvalKit
 	url = https://github.com/open-compass/VLMEvalKit.git
+[submodule "Open-Reasoner-Zero"]
+	path = Open-Reasoner-Zero
+	url = https://github.com/Open-Reasoner-Zero/Open-Reasoner-Zero.git
