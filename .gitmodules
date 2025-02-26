@@ -19,3 +19,6 @@
 [submodule "Open-Reasoner-Zero"]
 	path = Open-Reasoner-Zero
 	url = https://github.com/Open-Reasoner-Zero/Open-Reasoner-Zero.git
+[submodule "lmm-r1"]
+	path = lmm-r1
+	url = https://github.com/TideDra/lmm-r1.git
