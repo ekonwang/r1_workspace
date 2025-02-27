@@ -22,3 +22,6 @@
 [submodule "lmm-r1"]
 	path = lmm-r1
 	url = https://github.com/TideDra/lmm-r1.git
+[submodule "flash-attention"]
+	path = flash-attention
+	url = https://github.com/Dao-AILab/flash-attention.git
