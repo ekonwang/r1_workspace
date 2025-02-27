@@ -9,7 +9,7 @@ torchrun --nproc_per_node="4" \
     --node_rank="0" \
     --master_addr="127.0.0.1" \
     --master_port="12345" \
-    src/open_r1/grpo.py \
+    grpo.py \
     --output_dir ./outputs \
     --model_name_or_path $MODEL_NAME \
     --dataset_name $DATASET_NAME \
@@ -26,5 +26,5 @@ torchrun --nproc_per_node="4" \
     --run_name Qwen2-VL-2B-GRPO-CLEVR-70k \
     --save_steps 100 \
     --save_only_model true \
-    --deepspeed ./local_configs/zero3.json \
+    --deepspeed ./local_scripts/zero3.json \
     --num_generations 8
