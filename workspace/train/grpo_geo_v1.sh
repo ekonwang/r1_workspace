@@ -18,7 +18,7 @@ torchrun --nproc_per_node="4" \
     --model_name_or_path $MODEL_NAME \
     --dataset_name $DATASET_NAME \
     --max_prompt_length 1024 \
-    --max_completion_length 1024 \
+    --max_completion_length 512 \
     --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 4 \
     --logging_steps 1 \
@@ -32,4 +32,4 @@ torchrun --nproc_per_node="4" \
     --save_steps 100 \
     --save_only_model true \
     --deepspeed ./local_scripts/zero3.json \
-    --num_generations 8
+    --num_generations 4

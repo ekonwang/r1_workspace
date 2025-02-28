@@ -29,8 +29,8 @@ class GeomverseJsonlDataset(Dataset):
                 new_obj['solution'] = f"<answer> {obj['label']} </answer>"
 
                 self.data.append(new_obj)
-                # if len(self.data) >= 1000:
-                #     break
+                if len(self.data) >= 1000:
+                    break
 
     def __len__(self):
         return len(self.data)
