@@ -24,8 +24,7 @@ from transformers import Qwen2VLForConditionalGeneration
 from math_verify import parse, verify
 from trainer import Qwen2VLGRPOTrainer, Qwen2VLGRPOVLLMTrainer
 from trl import GRPOConfig, GRPOTrainer, ModelConfig, ScriptArguments, TrlParser, get_peft_config
-# we load the Geomverse dataset from a jsonl file
-from utils_data import load_custom_dataset
+
 
 @dataclass
 class GRPOScriptArguments(ScriptArguments):
@@ -78,10 +77,7 @@ def accuracy_reward(completions, solution, **kwargs):
                 student_answer = content_match.group(1).strip() if content_match else content.strip()
                 
                 # Compare the extracted answers
-                # if student_answer == ground_truth:
-                #     reward = 1.0
-                if abs(float(student_answer) - float(ground_truth)) < 2e-2 * abs(float(ground_truth)):
-                    # relax the tolerance
+                if student_answer == ground_truth:
                     reward = 1.0
             except Exception:
                 pass  # Keep reward as 0.0 if both methods fail
@@ -123,8 +119,7 @@ def main(script_args, training_args, model_args):
     reward_funcs = [reward_funcs_registry[func] for func in script_args.reward_funcs]
 
     # Load the dataset
-    # dataset = load_dataset(script_args.dataset_name, name=script_args.dataset_config)
-    train_dataset, test_dataset = load_custom_dataset(script_args.dataset_name)
+    dataset = load_dataset(script_args.dataset_name, name=script_args.dataset_config)
 
 
     # Format into conversation
@@ -166,9 +161,15 @@ def main(script_args, training_args, model_args):
         }
 
 
-    print("has image in dataset")
-    train_dataset = train_dataset.map(make_conversation_image)  # Utilize multiprocessing for faster mapping
-    test_dataset = test_dataset.map(make_conversation_image)
+    if "image" in dataset[script_args.dataset_train_split].features:
+        print("has image in dataset")
+        dataset = dataset.map(make_conversation_image)  # Utilize multiprocessing for faster mapping
+        # dataset = dataset.remove_columns(["original_question", "original_answer"])
+
+    else:
+        print("no image in dataset")
+        dataset = dataset.map(make_conversation)
+        dataset = dataset.remove_columns("messages")
 
     
     trainer_cls = Qwen2VLGRPOTrainer if not training_args.use_vllm else Qwen2VLGRPOVLLMTrainer
@@ -179,8 +180,8 @@ def main(script_args, training_args, model_args):
         model=model_args.model_name_or_path,
         reward_funcs=reward_funcs,
         args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=test_dataset if training_args.eval_strategy != "no" else None,
+        train_dataset=dataset[script_args.dataset_train_split],
+        eval_dataset=dataset[script_args.dataset_test_split] if training_args.eval_strategy != "no" else None,
         peft_config=get_peft_config(model_args),
         attn_implementation=model_args.attn_implementation,
         max_pixels=script_args.max_pixels,
@@ -192,8 +193,8 @@ def main(script_args, training_args, model_args):
 
     # Save and push to hub
     trainer.save_model(training_args.output_dir)
-    # if training_args.push_to_hub:
-    #     trainer.push_to_hub(dataset_name=script_args.dataset_name)
+    if training_args.push_to_hub:
+        trainer.push_to_hub(dataset_name=script_args.dataset_name)
 
 
 if __name__ == "__main__":
