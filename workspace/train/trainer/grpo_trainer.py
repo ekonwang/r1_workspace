@@ -47,6 +47,7 @@ from trl.trainer.grpo_config import GRPOConfig
 from trl.trainer.utils import generate_model_card, get_comet_experiment_url
 
 import copy
+from datetime import datetime
 
 
 if is_peft_available():
@@ -375,7 +376,18 @@ class Qwen2VLGRPOTrainer(Trainer):
         pixel_values = prompt_inputs["pixel_values"]
         image_grid_thw = prompt_inputs["image_grid_thw"]
 
+
+        # Log prompt length if DEBUG_MODE and LOG_LENGTHS are enabled
+        if os.getenv("DEBUG_MODE") == "true":
+            log_path = os.getenv("LOG_PATH")
+            current_time = datetime.now().strftime("%d-%H-%M-%S-%f")
+            prompt_lengths = prompt_mask.sum(dim=1).tolist()
+            with open(log_path, "a") as f:
+                f.write(f"------------- {current_time} Prompt Lengths -------------\n")
+                for i, length in enumerate(prompt_lengths):
+                    f.write(f"Prompt {i}: Length = {length}\n")
         
+
         if self.max_prompt_length is not None:
             prompt_ids = prompt_ids[:, -self.max_prompt_length :]
             prompt_mask = prompt_mask[:, -self.max_prompt_length :]
@@ -396,6 +408,18 @@ class Qwen2VLGRPOTrainer(Trainer):
         eos_idx[is_eos.any(dim=1)] = is_eos.int().argmax(dim=1)[is_eos.any(dim=1)]
         sequence_indices = torch.arange(is_eos.size(1), device=device).expand(is_eos.size(0), -1)
         completion_mask = (sequence_indices <= eos_idx.unsqueeze(1)).int()
+
+        # Log completion and total lengths if DEBUG_MODE and LOG_LENGTHS are enabled
+        if os.getenv("DEBUG_MODE") == "true":
+            log_path = os.getenv("LOG_PATH")
+            current_time = datetime.now().strftime("%d-%H-%M-%S-%f")
+            completion_lengths = completion_mask.sum(dim=1).tolist()
+            with open(log_path, "a") as f:
+                f.write(f"------------- {current_time} Completion and Total Lengths -------------\n")
+                for i, length in enumerate(completion_lengths):
+                    prompt_idx = i // self.num_generations  # Get original prompt index
+                    prompt_len = prompt_lengths[prompt_idx] if i < len(prompt_lengths) * self.num_generations else "unknown"
+                    f.write(f"Sample {i}: Prompt Length = {prompt_len}, Completion Length = {length}, Total Length = {prompt_len + length if isinstance(prompt_len, int) else 'unknown'}\n")
 
         # Concatenate prompt_mask with completion_mask for logit computation
         attention_mask = torch.cat([prompt_mask, completion_mask], dim=1)  # (B*G, P+C)
