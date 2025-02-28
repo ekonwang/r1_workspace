@@ -167,8 +167,20 @@ def main(script_args, training_args, model_args):
 
 
     print("has image in dataset")
-    train_dataset = train_dataset.map(make_conversation_image)  # Utilize multiprocessing for faster mapping
-    test_dataset = test_dataset.map(make_conversation_image)
+    # train_dataset = train_dataset.map(make_conversation_image)  # Utilize multiprocessing for faster mapping
+    # test_dataset = test_dataset.map(make_conversation_image)
+    # Process the datasets manually instead of using .map()
+    train_dataset_processed = []
+    for i in range(len(train_dataset)):
+        example = train_dataset[i]
+        example['prompt'] = make_conversation_image(example)['prompt']
+        train_dataset_processed.append(example)
+    
+    test_dataset_processed = []
+    for i in range(len(test_dataset)):
+        example = test_dataset[i]
+        example['prompt'] = make_conversation_image(example)['prompt']
+        test_dataset_processed.append(example)
 
     
     trainer_cls = Qwen2VLGRPOTrainer if not training_args.use_vllm else Qwen2VLGRPOVLLMTrainer
@@ -179,8 +191,8 @@ def main(script_args, training_args, model_args):
         model=model_args.model_name_or_path,
         reward_funcs=reward_funcs,
         args=training_args,
-        train_dataset=train_dataset,
-        eval_dataset=test_dataset if training_args.eval_strategy != "no" else None,
+        train_dataset=train_dataset_processed,
+        eval_dataset=test_dataset_processed if training_args.eval_strategy != "no" else None,
         peft_config=get_peft_config(model_args),
         attn_implementation=model_args.attn_implementation,
         max_pixels=script_args.max_pixels,
