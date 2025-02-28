@@ -9,13 +9,13 @@ torchrun --nproc_per_node="4" \
     --node_rank="0" \
     --master_addr="127.0.0.1" \
     --master_port="12345" \
-    grpo.py \
-    --output_dir ./outputs \
+    grpo_r1_v.py \
+    --output_dir ./outputs/r1-v \
     --model_name_or_path $MODEL_NAME \
     --dataset_name $DATASET_NAME \
     --max_prompt_length 1024 \
-    --per_device_train_batch_size 1 \
-    --gradient_accumulation_steps 4 \
+    --per_device_train_batch_size 2 \
+    --gradient_accumulation_steps 2 \
     --logging_steps 1 \
     --bf16 \
     --report_to tensorboard \

@@ -4,6 +4,7 @@ import torch
 import os
 from PIL import Image
 import json
+from tqdm import tqdm
 
 class GeomverseJsonlDataset(Dataset):
     def __init__(self, file_path, geomverse_root=None):
@@ -13,7 +14,7 @@ class GeomverseJsonlDataset(Dataset):
         """
         self.data = []
         with jsonlines.open(file_path) as reader:
-            for obj in reader:
+            for obj in tqdm(reader):
                 new_obj = dict()
 
                 image_path = os.path.join(geomverse_root, obj['image_path'])
