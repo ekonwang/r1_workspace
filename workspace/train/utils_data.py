@@ -57,6 +57,9 @@ def load_custom_dataset(file_path, train_split_ratio=0.8):
     train_size = int(len(dataset) * train_split_ratio)
     test_size = len(dataset) - train_size
     
+    if train_split_ratio == 1:
+        return dataset
+    
     # Split the dataset into train and test
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
     # return {
