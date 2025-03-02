@@ -19,6 +19,8 @@ from io import BytesIO
 from utils_data import load_custom_dataset
 from math_verify import parse, verify
 
+from transformers import AutoProcessor
+
 
 class VLMEval:
     def __init__(
@@ -59,6 +61,8 @@ class VLMEval:
             top_p=1.0,
             max_tokens=1024
         )
+
+        self.processor = AutoProcessor.from_pretrained(model_name)
     
     def _encode_image_to_base64(self, image_path: str) -> str:
         """Convert an image to base64 string."""
@@ -112,8 +116,15 @@ class VLMEval:
                             })
                 
                 processed_messages.append({"role": role, "content": processed_content})
-        
-        return processed_messages
+
+            vllm_prompt = self.processor.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+            )
+
+        return vllm_prompt
+
     
     def chat_vlm(
         self, 
@@ -134,21 +145,21 @@ class VLMEval:
             sampling_params = self.default_sampling_params
         
         # Process messages to handle images
-        processed_messages = self._prepare_messages(messages)
+        processed_prompt = self._prepare_messages(messages)
+        print(processed_prompt)
         
         # Generate response using vllm
         outputs = self.llm.generate(
-            prompt=None,
+            processed_prompt,
             sampling_params=sampling_params,
             prompt_token_ids=None,
-            messages=processed_messages
         )
         
         # Extract the generated text
         response_text = outputs[0].outputs[0].text
         
         # Update message history
-        full_message_history = processed_messages + [{"role": "assistant", "content": response_text}]
+        full_message_history = messages + [{"role": "assistant", "content": response_text}]
         
         return response_text, full_message_history
 
@@ -158,7 +169,8 @@ vlm_evaluator = None
 
 
 def _generate_model_name(model_name: str):
-    return model_name.replace("/", "_")
+    model_name = model_name.split("/")[-2:]
+    return '-'.join(model_name)
 
 # reply, messages = chat_gpt4o("Could you please give me a list of all the countries in the world?")
 # print(reply)
@@ -168,7 +180,7 @@ def eval_question(messages: List[Dict]):
 
 
 def _eval_geomverse_(example: dict):
-    QUESTION_TEMPLATE = "{Question}  Output the thinking process in <think> </think> and final answer (number) in <answer> </answer> tags."
+    QUESTION_TEMPLATE = "<image> {Question}  Output the thinking process in <think> </think> and final answer (number) in <answer> </answer> tags."
 
     def make_conversation_image(example):
         return {
@@ -181,6 +193,12 @@ def _eval_geomverse_(example: dict):
                     ],
                 },
             ],
+            # "prompt": [
+            #     {
+            #         "multi_modal_data": {"image": example["image"]},
+            #         "prompt": QUESTION_TEMPLATE.format(Question=example["problem"]),
+            #     },
+            # ],
         }
 
     def cal_reward(content, sol):
@@ -231,10 +249,10 @@ def _eval_geomverse_(example: dict):
         if bon_reward == 1.0:
             break
 
-    reply = vlm_evaluator.chat_vlm(example['prompt'])
+    reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
     reward = cal_reward(reply, example['solution'])
 
-    return {'prompt': example["problem"], "bon_replies": bon_replies, "bon_reward": bon_reward, "reward": reward, 'reply': reply}
+    return {'prompt': example["problem"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['solution']}
 
 
 def eval_dataset(dataset, output_path, verbose: bool = False):
@@ -252,6 +270,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
             try:
                 eval_dict = _eval_geomverse_(element)
             except Exception as err:
+                raise err
                 if 'keyboard' in str(err).lower():
                     raise err
                 print_error(err)
@@ -262,26 +281,39 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
                 if verbose:
                     print(f"\n" * 3)
                     print("=" * 40)
-                    print(f"Question: {eval_dict['question']}")
+                    print(f"Question: {eval_dict['prompt']}")
                     print(">" * 20)
                     print(f"Answer: {eval_dict['reply']}")
                     print(">" * 20)
-                    print(f"Ground Truth: {eval_dict['answer']}")
+                    print(f"Ground Truth: {eval_dict['solution']}")
                 
+                all_eval_data.append(eval_dict)
                 save_jsonl(all_eval_data, output_path, use_tqdm=False)
             
             # pbar.update(1)
             # pbar.set_description(f'Evaluating: {tot_acc / tot_eval * 100:.2f} ({tot_acc:6d}/{tot_eval:6d})')
             progress.update(task_id, advance=1)
-            progress.update(task_id, description=f'Evaluating: {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})')
+            progress.update(task_id, description=f'Evaluating: BoN@3 {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | Pass@1 {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})')
 
         return None
 
-MODEL_PATH = ''
+
+
+# MODEL_PATH = '/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2-VL-2B-Instruct'
+# vlm_evaluator = VLMEval(
+#     model_name=MODEL_PATH,
+#     tensor_parallel_size=4,  # Adjust based on available GPUs
+#     gpu_memory_utilization=0.9
+# )
+# dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1)
+# eval_dataset(dataset, f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl', True)
+
+
+MODEL_PATH = '/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/workspace/train/outputs/geo_v1/checkpoint-200'
 vlm_evaluator = VLMEval(
     model_name=MODEL_PATH,
-    tensor_parallel_size=2,  # Adjust based on available GPUs
+    tensor_parallel_size=4,  # Adjust based on available GPUs
     gpu_memory_utilization=0.9
 )
-dataset = load_custom_dataset('.temp/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1)
+dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1)
 eval_dataset(dataset, f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl', True)
