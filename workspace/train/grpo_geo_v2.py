@@ -153,15 +153,24 @@ def main(script_args, training_args, model_args):
     QUESTION_TEMPLATE = "Here is the tikz code for the geometry problem:```\n{tikz}\n```\n\n\n"\
         "{Question}  Output the thinking process in <think> </think> and final answer (number) in <answer> </answer> tags."
 
+    # def make_conversation_image(example):
+    #     return {
+    #         "prompt": [
+    #             {
+    #                 "role": "user",
+    #                 "content": [
+    #                     # {"type": "image"},
+    #                     {"type": "text", "text": QUESTION_TEMPLATE.format(Question=example["problem"], tikz=example["geometry"])},
+    #                 ],
+    #             },
+    #         ],
+    #     }
     def make_conversation_image(example):
         return {
             "prompt": [
                 {
                     "role": "user",
-                    "content": [
-                        # {"type": "image"},
-                        {"type": "text", "text": QUESTION_TEMPLATE.format(Question=example["problem"], tikz=example["geometry"])},
-                    ],
+                    "content": QUESTION_TEMPLATE.format(Question=example["problem"], tikz=example["geometry"])
                 },
             ],
         }

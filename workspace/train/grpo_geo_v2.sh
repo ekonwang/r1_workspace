@@ -2,7 +2,7 @@
 # @yikunwang 3.3
 export DEBUG_MODE="true"
 
-MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2-VL-2B-Instruct
+MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2.5-3B-Instruct
 DATASET_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/data.jsonl
 OUTPUT=./outputs/geo_v2
 export LOG_PATH=${OUTPUT}/debug_log_2b.txt
