@@ -337,8 +337,11 @@ class Qwen2VLGRPOTrainer(Trainer):
 
 
     # Get the per-token log probabilities for the completions for the model and the reference model
-    def _get_per_token_logps(self, model, input_ids, attention_mask, pixel_values, image_grid_thw):
-        logits = model(input_ids, attention_mask=attention_mask, pixel_values=pixel_values, image_grid_thw=image_grid_thw).logits  # (B, L, V)
+    def _get_per_token_logps(self, model, input_ids, attention_mask, pixel_values=None, image_grid_thw=None):
+        if pixel_values is not None and image_grid_thw is not None:
+            logits = model(input_ids, attention_mask=attention_mask, pixel_values=pixel_values, image_grid_thw=image_grid_thw).logits  # (B, L, V)
+        else:
+            logits = model(input_ids, attention_mask=attention_mask).logits  # (B, L, V)
         logits = logits[:, :-1, :]  # (B, L-1, V), exclude the last logit: it corresponds to the next token pred
         input_ids = input_ids[:, 1:]  # (B, L-1), exclude the first input ID since we don't have logits for it
         # Compute the log probabilities for the input tokens. Use a loop to reduce memory peak.
@@ -393,7 +396,9 @@ class Qwen2VLGRPOTrainer(Trainer):
         if is_mllm_model:
             pixel_values = prompt_inputs["pixel_values"]
             image_grid_thw = prompt_inputs["image_grid_thw"]
-
+        else:
+            pixel_values = None
+            image_grid_thw = None
 
         # Log prompt length if DEBUG_MODE and LOG_LENGTHS are enabled
         if os.getenv("DEBUG_MODE") == "true":
@@ -444,6 +449,9 @@ class Qwen2VLGRPOTrainer(Trainer):
         if is_mllm_model:
             pixel_values = prompt_inputs["pixel_values"].repeat(self.num_generations, 1)
             image_grid_thw = prompt_inputs["image_grid_thw"].repeat_interleave(self.num_generations, dim=0)
+        else:
+            pixel_values = None 
+            image_grid_thw = None
 
         per_token_logps = self._get_per_token_logps(model, prompt_completion_ids, attention_mask, pixel_values, image_grid_thw)
         # Get rid of the prompt (-1 because of the shift done in get_per_token_logps)
