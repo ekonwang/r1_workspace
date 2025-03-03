@@ -27,6 +27,7 @@ class GeomverseJsonlDataset(Dataset):
                 new_obj['image'] = image
                 new_obj['problem'] = obj['question']
                 new_obj['solution'] = f"<answer> {obj['label']} </answer>"
+                new_obj['geometry'] = obj['tikz']
 
                 self.data.append(new_obj)
                 if len(self.data) >= 120:
