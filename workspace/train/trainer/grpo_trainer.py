@@ -357,11 +357,13 @@ class Qwen2VLGRPOTrainer(Trainer):
         if return_outputs:
             raise ValueError("The GRPOTrainer does not support returning outputs")
     
-        
-
+    
         prompts = [x["prompt"] for x in inputs]
         prompts_text = [maybe_apply_chat_template(example, self.processing_class)["prompt"] for example in inputs]
-        images = [x["image"] for x in inputs]
+        if "image" in inputs[0] and inputs[0]["image"] is not None:
+            images = [x["image"] for x in inputs]
+        else:
+            images = None
         prompt_inputs = self.processing_class(
             text=prompts_text,
             images=images,
@@ -371,7 +373,9 @@ class Qwen2VLGRPOTrainer(Trainer):
             add_special_tokens=False,
         )
         # print(prompt_inputs)
+        # print(self.processing_class.batch_decode(prompt_inputs["input_ids"]))
         # exit()
+
         prompt_inputs = super()._prepare_inputs(prompt_inputs)
 
         prompt_ids, prompt_mask = prompt_inputs["input_ids"], prompt_inputs["attention_mask"]
