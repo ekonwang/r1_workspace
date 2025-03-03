@@ -1,3 +1,5 @@
+# we explore increase Qwen2.5-2B-Instruct textually on Geometry (@Geomverse) with GRPO (Group Relative Policy Optimization @Deepseek).
+# @yikunwang 3.3
 export DEBUG_MODE="true"
 
 MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2-VL-2B-Instruct
