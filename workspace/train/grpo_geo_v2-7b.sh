@@ -24,7 +24,7 @@ torchrun --nproc_per_node="4" \
     --max_prompt_length 1024 \
     --max_completion_length 512 \
     --per_device_train_batch_size 1 \
-    --gradient_accumulation_steps 4 \
+    --gradient_accumulation_steps 16 \
     --logging_steps 1 \
     --bf16 \
     --report_to tensorboard \
@@ -35,5 +35,6 @@ torchrun --nproc_per_node="4" \
     --run_name Qwen2-VL-2B-GRPO-Geomverse-v1 \
     --save_steps 100 \
     --save_only_model true \
+    --tensor_parallel_size 4 \
     --deepspeed ./local_scripts/zero3_offload.json \
     --num_generations 6
