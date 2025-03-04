@@ -30,8 +30,8 @@ class GeomverseJsonlDataset(Dataset):
                 new_obj['geometry'] = obj['tikz']
                 self.data.append(new_obj)
 
-                if len(self.data) >= 120:
-                    break
+                # if len(self.data) >= 120:
+                #     break
 
     def __len__(self):
         return len(self.data)

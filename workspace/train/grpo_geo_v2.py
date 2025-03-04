@@ -150,8 +150,8 @@ def main(script_args, training_args, model_args):
     #         ],
     #     }
 
-    QUESTION_TEMPLATE = "Here is the tikz code for the geometry problem:```\n{tikz}\n```\n\n\n"\
-        "{Question}  Output the thinking process in <think> </think> and final answer (number) in <answer> </answer> tags."
+    QUESTION_TEMPLATE = "{Question}  Output the thinking process in <think> </think> and final answer (number) in <answer> </answer> tags.\n\n\n"\
+        "Here is the tikz code for the geometry problem:```\n{tikz}\n```"
 
     # def make_conversation_image(example):
     #     return {

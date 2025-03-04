@@ -23,8 +23,8 @@ torchrun --nproc_per_node="4" \
     --dataset_name $DATASET_NAME \
     --max_prompt_length 1024 \
     --max_completion_length 512 \
-    --per_device_train_batch_size 1 \
-    --gradient_accumulation_steps 16 \
+    --per_device_train_batch_size 2 \
+    --gradient_accumulation_steps 8 \
     --logging_steps 1 \
     --bf16 \
     --report_to tensorboard \

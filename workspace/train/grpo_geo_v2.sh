@@ -13,7 +13,7 @@ rm $LOG_PATH
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/workspace/train
 
 mkdir -p $OUTPUT
-torchrun --nproc_per_node="3" \
+torchrun --nproc_per_node="4" \
     --nnodes="1" \
     --node_rank="0" \
     --master_addr="127.0.0.1" \
@@ -24,7 +24,7 @@ torchrun --nproc_per_node="3" \
     --dataset_name $DATASET_NAME \
     --max_prompt_length 1024 \
     --max_completion_length 512 \
-    --per_device_train_batch_size 2 \
+    --per_device_train_batch_size 1 \
     --gradient_accumulation_steps 4 \
     --logging_steps 1 \
     --bf16 \
@@ -37,4 +37,4 @@ torchrun --nproc_per_node="3" \
     --save_steps 100 \
     --save_only_model true \
     --deepspeed ./local_scripts/zero3_offload.json \
-    --num_generations 6 --use_vllm
+    --num_generations 6
