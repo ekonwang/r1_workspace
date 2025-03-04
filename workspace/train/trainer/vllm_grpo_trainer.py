@@ -535,6 +535,10 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
                 add_special_tokens=False,
             )
 
+        prompt_ids, prompt_mask = (
+            prompt_inputs["input_ids"].to(device),
+            prompt_inputs["attention_mask"].to(device),
+        ) 
         if self.max_prompt_length is not None:
             prompt_ids = prompt_ids[:, -self.max_prompt_length :]
             prompt_mask = prompt_mask[:, -self.max_prompt_length :]
@@ -611,7 +615,10 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
         eos_idx = torch.full(
             (is_eos.size(0),), is_eos.size(1), dtype=torch.long, device=device
         )
-        eos_idx[is_eos.any(dim=1)] = is_eos.int().argmax(dim=1)[is_eos.any(dim=1)]
+        # Fix: Check if there are any EOS tokens before trying to get their indices
+        has_eos = is_eos.any(dim=1)
+        if has_eos.any():
+            eos_idx[has_eos] = is_eos.int().argmax(dim=1)[has_eos]
         sequence_indices = torch.arange(is_eos.size(1), device=device).expand(
             is_eos.size(0), -1
         )

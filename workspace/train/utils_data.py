@@ -31,7 +31,7 @@ class GeomverseJsonlDataset(Dataset):
                 self.data.append(new_obj)
 
                 if len(self.data) >= 120:
-                        break
+                    break
 
     def __len__(self):
         return len(self.data)
