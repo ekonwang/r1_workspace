@@ -6,7 +6,7 @@ export DEBUG_MODE="true"
 MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2.5-7B-Instruct
 DATASET_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/data.jsonl
 OUTPUT=./outputs/geo_v2-7b
-export LOG_PATH=${OUTPUT}/debug_log_2b.txt
+export LOG_PATH=${OUTPUT}/debug_log_7b.txt
 
 rm $LOG_PATH
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/workspace/train
@@ -28,13 +28,12 @@ torchrun --nproc_per_node="4" \
     --logging_steps 1 \
     --bf16 \
     --report_to tensorboard \
-    --gradient_checkpointing false \
+    --gradient_checkpointing true \
     --attn_implementation flash_attention_2 \
     --max_pixels 401408 \
     --num_train_epochs 2 \
     --run_name Qwen2-VL-2B-GRPO-Geomverse-v1 \
     --save_steps 100 \
     --save_only_model true \
-    --tensor_parallel_size 4 \
-    --deepspeed ./local_scripts/zero3_offload.json \
+    --deepspeed ./local_scripts/zero3_offload-tp4.json \
     --num_generations 6

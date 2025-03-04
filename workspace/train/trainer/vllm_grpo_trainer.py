@@ -492,17 +492,26 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
             :, :-1, :
         ]  # (B, L-1, V), exclude the last logit: it corresponds to the next token pred
         input_ids = input_ids[
-            :, -logits_to_keep:
-        ]  # (B, L-1), exclude the first input ID since we don't have logits for it
+            :, 1:
+            ]  # (B, L-1), exclude the first input ID since we don't have logits for it
+        
         # Compute the log probabilities for the input tokens. Use a loop to reduce memory peak.
-        logits = logits[:, -logits_to_keep:]
+        # Only keep the last logits_to_keep tokens if specified
+        if logits_to_keep is not None:
+            logits = logits[:, -logits_to_keep:]
+            input_ids = input_ids[:, -logits_to_keep:]
+        
         per_token_logps = []
-        for logits_row, input_ids_row in zip(logits, input_ids):
-            log_probs = logits_row.log_softmax(dim=-1)
+        # Make sure input_ids and logits have the same batch dimension
+        batch_size = min(logits.size(0), input_ids.size(0))
+        
+        for i in range(batch_size):
+            log_probs = logits[i].log_softmax(dim=-1)
             token_log_prob = torch.gather(
-                log_probs, dim=1, index=input_ids_row.unsqueeze(1)
+                log_probs, dim=1, index=input_ids[i].unsqueeze(1)
             ).squeeze(1)
             per_token_logps.append(token_log_prob)
+        
         return torch.stack(per_token_logps)
 
     # Trainer "prepares" the inputs before calling `compute_loss`. It converts to tensor and move to device.
