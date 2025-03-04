@@ -46,7 +46,7 @@ def parse_args():
     parser.add_argument('--size', help='matrix size', default=70000, type=int)
     parser.add_argument('--interval', help='sleep interval', default=0.0001, type=float)
     parser.add_argument('--threshold', type=int, help='memory threshold for occupying', default=0)
-    parser.add_argument('--daemon_interval', type=float, default=30)
+    parser.add_argument('--daemon_interval', type=float, default=60)
     args = parser.parse_args()
     return args
  
