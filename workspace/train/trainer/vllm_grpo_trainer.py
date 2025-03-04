@@ -469,6 +469,10 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
         image_grid_thw=None,
         logits_to_keep=None,
     ):
+        # Ensure input_ids is of the correct integer type
+        if input_ids.dtype != torch.long and input_ids.dtype != torch.int:
+            input_ids = input_ids.long()
+
         if pixel_values is not None and image_grid_thw is not None:
             pixel_values = pixel_values.to(model.device)
             image_grid_thw = image_grid_thw.to(device=model.device)
@@ -535,9 +539,16 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
                 add_special_tokens=False,
             )
 
+        if is_mllm_model:
+            prompt_ids = prompt_inputs["input_ids"].long()  # Ensure it's long tensor
+            prompt_mask = prompt_inputs["attention_mask"]
+        else:
+            prompt_ids = prompt_inputs["input_ids"].long()  # Ensure it's long tensor
+            prompt_mask = prompt_inputs["attention_mask"]
+
         if self.max_prompt_length is not None:
-            prompt_ids = prompt_ids[:, -self.max_prompt_length :]
-            prompt_mask = prompt_mask[:, -self.max_prompt_length :]
+            prompt_ids = prompt_ids[:, -self.max_prompt_length:]
+            prompt_mask = prompt_mask[:, -self.max_prompt_length:]
 
         if self.args.use_vllm:
             # First, have main process load weights if needed
@@ -773,9 +784,9 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
             raise ValueError("The GRPOTrainer does not support returning outputs")
         # Compute the per-token log probabilities for the model
 
-        prompt_ids, prompt_mask = inputs["prompt_ids"], inputs["prompt_mask"]
+        prompt_ids, prompt_mask = inputs["prompt_ids"].long(), inputs["prompt_mask"]
         completion_ids, completion_mask = (
-            inputs["completion_ids"],
+            inputs["completion_ids"].long(),
             inputs["completion_mask"],
         )
         input_ids = torch.cat([prompt_ids, completion_ids], dim=1)
