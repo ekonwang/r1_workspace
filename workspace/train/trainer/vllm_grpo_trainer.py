@@ -465,18 +465,25 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
         model,
         input_ids,
         attention_mask,
-        pixel_values,
-        image_grid_thw,
-        logits_to_keep,
+        pixel_values=None,
+        image_grid_thw=None,
+        logits_to_keep=None,
     ):
-        pixel_values = pixel_values.to(model.device)
-        image_grid_thw = image_grid_thw.to(device=model.device)
-        logits = model(
-            input_ids,
-            attention_mask=attention_mask,
-            pixel_values=pixel_values,
-            image_grid_thw=image_grid_thw,
-        ).logits  # (B, L, V)
+        if pixel_values is not None and image_grid_thw is not None:
+            pixel_values = pixel_values.to(model.device)
+            image_grid_thw = image_grid_thw.to(device=model.device)
+            logits = model(
+                input_ids,
+                attention_mask=attention_mask,
+                pixel_values=pixel_values,
+                image_grid_thw=image_grid_thw,
+            ).logits  # (B, L, V)
+        else:
+            logits = model(
+                input_ids,
+                attention_mask=attention_mask,
+            ).logits  # (B, L, V)
+        
         logits = logits[
             :, :-1, :
         ]  # (B, L-1, V), exclude the last logit: it corresponds to the next token pred
@@ -501,24 +508,33 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
     ) -> dict[str, Union[torch.Tensor, Any]]:
         device = self.accelerator.device
         prompts = [x["prompt"] for x in inputs]
-        images = [x["image"] for x in inputs]
         prompts_text = [
             maybe_apply_chat_template(example, self.processing_class)["prompt"]
             for example in inputs
         ]
-        prompt_inputs = self.processing_class(
-            # prompts_text, return_tensors="pt", padding=True, padding_side="left", add_special_tokens=False
-            text=prompts_text,
-            images=images,
-            return_tensors="pt",
-            padding=True,
-            padding_side="left",
-            add_special_tokens=False,
-        )
-        prompt_ids, prompt_mask = (
-            prompt_inputs["input_ids"].to(device),
-            prompt_inputs["attention_mask"].to(device),
-        )
+        is_mllm_model = False
+
+        if "image" in inputs[0] and inputs[0]["image"] is not None:
+            images = [x["image"] for x in inputs]
+            prompt_inputs = self.processing_class(
+                # prompts_text, return_tensors="pt", padding=True, padding_side="left", add_special_tokens=False
+                text=prompts_text,
+                images=images,
+                return_tensors="pt",
+                padding=True,
+                padding_side="left",
+                add_special_tokens=False,
+            )
+            is_mllm_model = True
+        else:
+            prompt_inputs = self.processing_class(
+                prompts_text,
+                return_tensors="pt",
+                padding=True,
+                padding_side="left",
+                add_special_tokens=False,
+            )
+
         if self.max_prompt_length is not None:
             prompt_ids = prompt_ids[:, -self.max_prompt_length :]
             prompt_mask = prompt_mask[:, -self.max_prompt_length :]
@@ -544,12 +560,18 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
 
             # Generate completions using vLLM: gather all prompts and use them in a single call in the main process
             all_prompts_text = gather_object(prompts_text)
-            all_images = gather_object(images)
-            # group into pairs
-            all_multimodal_inputs = [
-                {"prompt": p, "multi_modal_data": {"image": i}}
-                for p, i in zip(all_prompts_text, all_images)
-            ]
+
+            if is_mllm_model:
+                all_images = gather_object(images)
+                # group into pairs
+                all_multimodal_inputs = [
+                    {"prompt": p, "multi_modal_data": {"image": i}}
+                    for p, i in zip(all_prompts_text, all_images)
+                ]
+            else:
+                all_multimodal_inputs = [
+                    {"prompt": p} for p in all_prompts_text
+                ]
 
             if self.accelerator.is_main_process:
                 outputs = self.llm.generate(
@@ -601,11 +623,15 @@ class Qwen2VLGRPOVLLMTrainer(Trainer):
         #     self.num_generations, dim=0
         # )
 
-        pixel_values = prompt_inputs["pixel_values"]
+        if is_mllm_model:
+            pixel_values = prompt_inputs["pixel_values"]
+            image_grid_thw = prompt_inputs["image_grid_thw"]
+        else:
+            pixel_values = None
+            image_grid_thw = None
         # [None].repeat_interleave(self.num_generations, dim=0)
         # pixel_values = pixel_values.view(-1, pixel_values.shape[-1])
 
-        image_grid_thw = prompt_inputs["image_grid_thw"]
         # .repeat_interleave(
         #     self.num_generations, dim=0
         # )
