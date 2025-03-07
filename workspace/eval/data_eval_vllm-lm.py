@@ -248,7 +248,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
             progress.update(task_id, advance=1)
             progress.update(task_id, description=f'Evaluating: BoN@3 {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | Pass@1 {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})')
 
-        return None
+        return f'Evaluating: BoN@3 {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | Pass@1 {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})'
 
 
 # Qwen-2.5-Instruct evaluation
@@ -259,5 +259,10 @@ vlm_evaluator = VLMEval(
     gpu_memory_utilization=0.9
 )
 print_error(MODEL_PATH)
+OUTPUT_PATH = f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl'
 dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1)
-eval_dataset(dataset, f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl', True)
+result = eval_dataset(dataset, OUTPUT_PATH, True)
+
+with open(OUTPUT_PATH.replace('.jsonl', '.log'), 'w') as f:
+    f.write(f'{MODEL_PATH}\n')
+    f.write(f'{result}\n')
