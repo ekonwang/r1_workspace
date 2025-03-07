@@ -185,7 +185,7 @@ def _eval_geomverse_(example: dict):
                 pass  # Keep reward as 0.0 if both methods fail
         return reward
 
-    example['prompt'] = make_conversation_image(example)
+    example['prompt'] = make_conversation_image(example)['prompt']
 
     # BON evaluation
     bon_replies = []
