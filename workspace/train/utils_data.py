@@ -7,11 +7,13 @@ import json
 from tqdm import tqdm
 
 class GeomverseJsonlDataset(Dataset):
-    def __init__(self, file_path, geomverse_root=None, max_samples=None):
+    def __init__(self, file_path, geomverse_root=None, max_samples=None, sample_size=None):
         """
         Args:
             file_path (str): Path to the JSONL file.
         """
+        assert sample_size is None or (isinstance(sample_size, int) and sample_size > 0)
+        
         self.data = []
         with jsonlines.open(file_path) as reader:
             for obj in tqdm(reader):
@@ -30,8 +32,9 @@ class GeomverseJsonlDataset(Dataset):
                 new_obj['geometry'] = obj['tikz']
                 self.data.append(new_obj)
                 
-                # if len(self.data) >= 120:
-                #     break
+                if sample_size is not None:
+                    if len(self.data) >= sample_size:
+                        break
 
     def __len__(self):
         return len(self.data)
@@ -40,7 +43,7 @@ class GeomverseJsonlDataset(Dataset):
         return self.data[idx]
 
 
-def load_custom_dataset(file_path, train_split_ratio=0.8):
+def load_custom_dataset(file_path, train_split_ratio=0.8, sample_size=None):
     """
     Loads a custom dataset from a JSONL file and splits it into train and test sets.
     
@@ -54,7 +57,7 @@ def load_custom_dataset(file_path, train_split_ratio=0.8):
     """
 
     # Root = ./.temp
-    dataset = GeomverseJsonlDataset(file_path, os.path.join(os.path.dirname(file_path), '../../..'))
+    dataset = GeomverseJsonlDataset(file_path, os.path.join(os.path.dirname(file_path), '../../..'), sample_size)
     train_size = int(len(dataset) * train_split_ratio)
     test_size = len(dataset) - train_size
     

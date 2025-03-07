@@ -260,7 +260,7 @@ vlm_evaluator = VLMEval(
 )
 print_error(MODEL_PATH)
 OUTPUT_PATH = f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl'
-dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1)
+dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1, sample_size=120)
 result = eval_dataset(dataset, OUTPUT_PATH, True)
 
 with open(OUTPUT_PATH.replace('.jsonl', '.log'), 'w') as f:
