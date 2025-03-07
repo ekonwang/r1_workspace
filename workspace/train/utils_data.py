@@ -7,7 +7,7 @@ import json
 from tqdm import tqdm
 
 class GeomverseJsonlDataset(Dataset):
-    def __init__(self, file_path, geomverse_root=None):
+    def __init__(self, file_path, geomverse_root=None, max_samples=None):
         """
         Args:
             file_path (str): Path to the JSONL file.
@@ -29,7 +29,7 @@ class GeomverseJsonlDataset(Dataset):
                 new_obj['solution'] = f"<answer> {obj['label']} </answer>"
                 new_obj['geometry'] = obj['tikz']
                 self.data.append(new_obj)
-
+                
                 # if len(self.data) >= 120:
                 #     break
 
