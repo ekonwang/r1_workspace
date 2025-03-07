@@ -7,7 +7,7 @@ import json
 from tqdm import tqdm
 
 class GeomverseJsonlDataset(Dataset):
-    def __init__(self, file_path, geomverse_root=None, max_samples=None, sample_size=None):
+    def __init__(self, file_path, geomverse_root=None, sample_size=None):
         """
         Args:
             file_path (str): Path to the JSONL file.
