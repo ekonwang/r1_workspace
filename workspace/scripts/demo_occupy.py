@@ -6,8 +6,11 @@ import shutil
 import sys
 import numpy as np
 import subprocess
+from datetime import datetime
 
-from utils import print_error
+def print_error(message):
+    message = f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {message}'
+    print(f"\033[91m\033[1m{message}\033[0m")
 
 GLOBAL_DAEMON=0
 DAEMON_INTERVAL=30
