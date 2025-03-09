@@ -252,8 +252,11 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
 
 # Qwen-2.5-Instruct evaluation
 MODEL_PATH = sys.argv[1]  # Use the correct path for Qwen-2.5-Instruct
-OUTPUT_PATH = f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl'
-dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1, sample_size=120)
+# OUTPUT_PATH = f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl'
+# dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1, sample_size=120)
+
+OUTPUT_PATH = f'.temp/outputs/GeomVerse/D2/{_generate_model_name(MODEL_PATH)}.jsonl'
+dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D2/data.jsonl', train_split_ratio=1, sample_size=120)
 
 vlm_evaluator = VLMEval(
     model_name=MODEL_PATH,
