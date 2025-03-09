@@ -54,8 +54,8 @@ def snap_download_dataset(dataset_name):
         except Exception as err:
             print_error(err)
 
-snap_download_model("Qwen/Qwen2.5-3B-Instruct")
-snap_download_model("Qwen/Qwen2.5-7B-Instruct")
+# snap_download_model("Qwen/Qwen2.5-3B-Instruct")
+# snap_download_model("Qwen/Qwen2.5-7B-Instruct")
 snap_download_model("Qwen/Qwen2.5-14B-Instruct")
 
 # from huggingface_hub import hf_hub_download
