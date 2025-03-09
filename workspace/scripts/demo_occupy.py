@@ -74,8 +74,8 @@ def matrix_multiplication(args):
  
  
 if __name__ == "__main__":
-    # usage: python demo_occupy.py --size 55000 --gpus 4 --interval 0.03 --threshold 24
-    # usage: python demo_occupy.py --size 55000 --gpus 4 --interval 0.05 --threshold 24000 --daemon_interval 0.1 
+    # usage: python workspace/scripts/demo_occupy.py --size 55000 --gpus 4 --interval 0.03 --threshold 24
+    # usage: python workspace/scripts/demo_occupy.py --size 55000 --gpus 4 --interval 0.05 --threshold 24000 --daemon_interval 0.1 
     args = parse_args()
     DAEMON_INTERVAL = args.daemon_interval
 
