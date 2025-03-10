@@ -181,6 +181,12 @@ def main(script_args, training_args, model_args):
                     "content": QUESTION_TEMPLATE.format(Question=example["problem"], tikz=example["geometry"])
                 },
             ],
+            "completion": [
+                {
+                    "role": "assistant",
+                    "content": example["completion"]
+                },
+            ],
         }
 
 
@@ -191,15 +197,13 @@ def main(script_args, training_args, model_args):
     train_dataset_processed = []
     for i in range(len(train_dataset)):
         example = train_dataset[i]
-        example['prompt'] = make_conversation_image(example)['prompt']
-        example['image'] = None
+        example = make_conversation_image(example)
         train_dataset_processed.append(example)
     
     test_dataset_processed = []
     for i in range(len(test_dataset)):
         example = test_dataset[i]
-        example['prompt'] = make_conversation_image(example)['prompt']
-        example['image'] = None
+        example = make_conversation_image(example)
         test_dataset_processed.append(example)
 
     if script_args.use_sft:
