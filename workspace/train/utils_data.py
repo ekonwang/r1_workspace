@@ -30,6 +30,7 @@ class GeomverseJsonlDataset(Dataset):
                 new_obj['problem'] = obj['question']
                 new_obj['solution'] = f"<answer> {obj['label']} </answer>"
                 new_obj['geometry'] = obj['tikz']
+                new_obj['completion'] = obj["cot"]
                 self.data.append(new_obj)
                 
                 if sample_size is not None:

@@ -49,7 +49,7 @@ class GRPOScriptArguments(ScriptArguments):
         default=3136,
         metadata={"help": "Minimum number of pixels for the image"},
     )
-    use_sft: bool = field(
+    use_sft: Optional[bool] = field(
         default=False,
         metadata={"help": "Whether to use SFT training"},
     )
