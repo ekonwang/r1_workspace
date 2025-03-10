@@ -187,6 +187,8 @@ def main(script_args, training_args, model_args):
                     "content": example["completion"]
                 },
             ],
+            # "prompt": QUESTION_TEMPLATE.format(Question=example["problem"], tikz=example["geometry"]),
+            # "completion": example["completion"]
         }
 
 

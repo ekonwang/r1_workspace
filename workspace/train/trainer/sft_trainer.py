@@ -183,7 +183,7 @@ class Qwen2VLSFTTrainer(Trainer):
         if "image" in inputs and inputs["image"] is not None and any(inputs["image"]):
             # Multimodal inputs with images
             prompts_text = [maybe_apply_chat_template(example, self.tokenizer)["prompt"] for example in inputs]
-            completions_text = [example["completion"] for example in inputs]
+            completions_text = [maybe_apply_chat_template(example, self.tokenizer)["completion"] for example in inputs]
             
             # Combine prompts and completions
             texts = [p + c for p, c in zip(prompts_text, completions_text)]
@@ -201,8 +201,15 @@ class Qwen2VLSFTTrainer(Trainer):
             )
         else:
             # Text-only inputs
-            prompts_text = [maybe_apply_chat_template(example, self.tokenizer)["prompt"] for example in inputs]
-            completions_text = [example["completion"] for example in inputs]
+            try:
+                completions_text = [maybe_apply_chat_template(example, self.tokenizer)["completion"] for example in inputs]
+                prompts_text = [maybe_apply_chat_template(example, self.tokenizer)["prompt"] for example in inputs]
+            except:
+                print(inputs)
+                print([maybe_apply_chat_template(example, self.tokenizer) for example in inputs])
+                print([maybe_apply_chat_template(example, self.tokenizer)["prompt"] for example in inputs])
+                print([maybe_apply_chat_template(example, self.tokenizer)["completion"] for example in inputs])
+                exit()
             
             # Combine prompts and completions
             texts = [p + c for p, c in zip(prompts_text, completions_text)]
@@ -246,7 +253,7 @@ class Qwen2VLSFTTrainer(Trainer):
             "attention_mask": prompt_mask,
         }
 
-    def compute_loss(self, model, inputs, return_outputs=False):
+    def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
         """
         Compute the training loss.
         """
