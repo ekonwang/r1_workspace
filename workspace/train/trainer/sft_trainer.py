@@ -182,8 +182,8 @@ class Qwen2VLSFTTrainer(Trainer):
         # Process the inputs based on whether they contain images or not
         if "image" in inputs and inputs["image"] is not None and any(inputs["image"]):
             # Multimodal inputs with images
-            prompts_text = [maybe_apply_chat_template(example, self.tokenizer)["prompt"] for example in inputs]
-            completions_text = [maybe_apply_chat_template(example, self.tokenizer)["completion"] for example in inputs]
+            prompts_text = [maybe_apply_chat_template(example, self.processing_class)["prompt"] for example in inputs]
+            completions_text = [maybe_apply_chat_template(example, self.processing_class)["completion"] for example in inputs]
             
             # Combine prompts and completions
             texts = [p + c for p, c in zip(prompts_text, completions_text)]
@@ -202,13 +202,13 @@ class Qwen2VLSFTTrainer(Trainer):
         else:
             # Text-only inputs
             try:
-                completions_text = [maybe_apply_chat_template(example, self.tokenizer)["completion"] for example in inputs]
-                prompts_text = [maybe_apply_chat_template(example, self.tokenizer)["prompt"] for example in inputs]
+                completions_text = [maybe_apply_chat_template(example, self.processing_class)["completion"] for example in inputs]
+                prompts_text = [maybe_apply_chat_template(example, self.processing_class)["prompt"] for example in inputs]
             except:
                 print(inputs)
-                print([maybe_apply_chat_template(example, self.tokenizer) for example in inputs])
-                print([maybe_apply_chat_template(example, self.tokenizer)["prompt"] for example in inputs])
-                print([maybe_apply_chat_template(example, self.tokenizer)["completion"] for example in inputs])
+                print([maybe_apply_chat_template(example, self.processing_class) for example in inputs])
+                print([maybe_apply_chat_template(example, self.processing_class)["prompt"] for example in inputs])
+                print([maybe_apply_chat_template(example, self.processing_class)["completion"] for example in inputs])
                 exit()
             
             # Combine prompts and completions

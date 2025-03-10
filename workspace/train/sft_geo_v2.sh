@@ -34,7 +34,7 @@ torchrun --nproc_per_node="4" \
     --gradient_checkpointing true \
     --attn_implementation flash_attention_2 \
     --max_pixels 401408 \
-    --num_train_epochs 2 \
+    --num_train_epochs 1 \
     --run_name $RUN_NAME \
     --save_steps 100 \
     --save_only_model true \
