@@ -246,11 +246,12 @@ class Qwen2VLSFTTrainer(Trainer):
                 f.write(f"------------- {current_time} Prompt Lengths -------------\n")
                 for i, length in enumerate(prompt_lengths):
                     f.write(f"Context {i}: Length = {length}\n")
-                    f.write(f"Context texts: {context_texts}\n")
+                    f.write(f"Context texts: {context_texts[i]}\n")
 
         return {
             "input_ids": prompt_ids,
             "attention_mask": prompt_mask,
+            "labels": prompt_ids,
         }
 
     def compute_loss(self, model, inputs, return_outputs=False, num_items_in_batch=None):
@@ -258,14 +259,13 @@ class Qwen2VLSFTTrainer(Trainer):
         Compute the training loss.
         """
         # Prepare the inputs
-        # prepared_inputs = self._prepare_inputs(inputs)
+        # prepared_inputs = self._prepare_inputs(inputs) # 在 inner loop 中会自动调用，这里不需要调这个 function
         
         # Forward pass
-        outputs = model(**inputs)
+        outputs = model(**inputs) # 需要传入 Labels，否则 Loss 不会自动计算
         
         # Get the loss
         loss = outputs.loss
-        
         return (loss, outputs) if return_outputs else loss
 
     def create_model_card(
