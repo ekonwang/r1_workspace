@@ -37,6 +37,8 @@ from transformers.utils import is_peft_available
 from trl.data_utils import maybe_apply_chat_template
 from trl.trainer.utils import generate_model_card
 
+from datetime import datetime
+
 if is_peft_available():
     from peft import PeftConfig, get_peft_model
 
@@ -143,10 +145,19 @@ class Qwen2VLSFTTrainer(Trainer):
             else:
                 processing_class = AutoTokenizer.from_pretrained(model.config._name_or_path, padding_side="left")
 
+        # Training arguments
+        self.max_prompt_length = args.max_prompt_length
+        self.max_completion_length = args.max_completion_length  # = |o_i| in the paper
+        
+        # Initialize the data collator
+        def data_collator(features):
+            return features
+        
         # Initialize the trainer
         super().__init__(
             model=model,
             args=args,
+            data_collator=data_collator,  # Add this line to use our simple data collator
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
             tokenizer=processing_class,
@@ -178,7 +189,7 @@ class Qwen2VLSFTTrainer(Trainer):
             texts = [p + c for p, c in zip(prompts_text, completions_text)]
             
             # Process with images
-            processed_inputs = self.tokenizer(
+            prompt_inputs = self.processing_class(
                 text=texts,
                 images=inputs["image"],
                 return_tensors="pt",
@@ -197,7 +208,7 @@ class Qwen2VLSFTTrainer(Trainer):
             texts = [p + c for p, c in zip(prompts_text, completions_text)]
             
             # Process text only
-            processed_inputs = self.tokenizer(
+            prompt_inputs = self.processing_class(
                 texts,
                 return_tensors="pt",
                 padding=True,
@@ -206,13 +217,34 @@ class Qwen2VLSFTTrainer(Trainer):
                 return_attention_mask=True,
                 add_special_tokens=True,
             )
+        
+        prompt_inputs = super()._prepare_inputs(prompt_inputs)
+        prompt_ids, prompt_mask = prompt_inputs["input_ids"], prompt_inputs["attention_mask"]
+        # device = self.accelerator.device
 
-        # Move to the correct device
-        for k, v in processed_inputs.items():
-            if isinstance(v, torch.Tensor):
-                processed_inputs[k] = v.to(self.args.device)
-                
-        return processed_inputs
+        if self.max_prompt_length is not None:
+            max_context_length = self.max_prompt_length + self.max_completion_length
+            prompt_ids = prompt_ids[:, -max_context_length :]
+            prompt_mask = prompt_mask[:, -max_context_length :]
+        
+        # Decode the generated completions
+        context_texts = self.processing_class.batch_decode(prompt_ids, skip_special_tokens=True)
+
+        # Log prompt length if DEBUG_MODE and LOG_LENGTHS are enabled
+        if os.getenv("DEBUG_MODE") == "true":
+            log_path = os.getenv("LOG_PATH")
+            current_time = datetime.now().strftime("%d-%H-%M-%S-%f")
+            prompt_lengths = prompt_mask.sum(dim=1).tolist()
+            with open(log_path, "a") as f:
+                f.write(f"------------- {current_time} Prompt Lengths -------------\n")
+                for i, length in enumerate(prompt_lengths):
+                    f.write(f"Context {i}: Length = {length}\n")
+                    f.write(f"Context texts: {context_texts}\n")
+
+        return {
+            "input_ids": prompt_ids,
+            "attention_mask": prompt_mask,
+        }
 
     def compute_loss(self, model, inputs, return_outputs=False):
         """
