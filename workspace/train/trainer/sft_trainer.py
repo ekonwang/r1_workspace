@@ -225,9 +225,9 @@ class Qwen2VLSFTTrainer(Trainer):
                 add_special_tokens=True,
             )
         
-        prompt_inputs = super()._prepare_inputs(prompt_inputs)
-        prompt_ids, prompt_mask = prompt_inputs["input_ids"], prompt_inputs["attention_mask"]
-        # device = self.accelerator.device
+        # prompt_inputs = super()._prepare_inputs(prompt_inputs)
+        device = self.accelerator.device
+        prompt_ids, prompt_mask = prompt_inputs["input_ids"].to(device), prompt_inputs["attention_mask"].to(device)
 
         if self.max_prompt_length is not None:
             max_context_length = self.max_prompt_length + self.max_completion_length
@@ -258,10 +258,10 @@ class Qwen2VLSFTTrainer(Trainer):
         Compute the training loss.
         """
         # Prepare the inputs
-        prepared_inputs = self._prepare_inputs(inputs)
+        # prepared_inputs = self._prepare_inputs(inputs)
         
         # Forward pass
-        outputs = model(**prepared_inputs)
+        outputs = model(**inputs)
         
         # Get the loss
         loss = outputs.loss
