@@ -53,6 +53,10 @@ class GRPOScriptArguments(ScriptArguments):
         default=False,
         metadata={"help": "Whether to use SFT training"},
     )
+    sample_size: Optional[int] = field(
+        default=None,
+        metadata={"help": "Exact number of loaded dataset samples"},
+    )
 
 
 def accuracy_reward(completions, solution, **kwargs):
@@ -128,7 +132,7 @@ def main(script_args, training_args, model_args):
 
     # Load the dataset
     # dataset = load_dataset(script_args.dataset_name, name=script_args.dataset_config)
-    train_dataset, test_dataset = load_custom_dataset(script_args.dataset_name)
+    train_dataset, test_dataset = load_custom_dataset(script_args.dataset_name, sample_size=script_args.sample_size)
 
 
     # Format into conversation

@@ -160,7 +160,7 @@ class Qwen2VLSFTTrainer(Trainer):
             data_collator=data_collator,  # Add this line to use our simple data collator
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            tokenizer=processing_class,
+            processing_class=processing_class,
             callbacks=callbacks,
             optimizers=optimizers,
         )

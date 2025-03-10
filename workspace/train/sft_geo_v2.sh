@@ -39,4 +39,4 @@ torchrun --nproc_per_node="4" \
     --save_steps 100 \
     --save_only_model true \
     --deepspeed ./local_scripts/zero3_offload-tp4.json \
-    --num_generations 6 --use_sft
+    --num_generations 6 --use_sft --sample_size 200
