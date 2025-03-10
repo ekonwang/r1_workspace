@@ -149,7 +149,7 @@ class Qwen2VLSFTTrainer(Trainer):
             args=args,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            tokenizer=processing_class,
+            processing_class=processing_class,
             callbacks=callbacks,
             optimizers=optimizers,
         )
@@ -178,7 +178,7 @@ class Qwen2VLSFTTrainer(Trainer):
             texts = [p + c for p, c in zip(prompts_text, completions_text)]
             
             # Process with images
-            processed_inputs = self.tokenizer(
+            processed_inputs = self.processing_class(
                 text=texts,
                 images=inputs["image"],
                 return_tensors="pt",
@@ -197,7 +197,7 @@ class Qwen2VLSFTTrainer(Trainer):
             texts = [p + c for p, c in zip(prompts_text, completions_text)]
             
             # Process text only
-            processed_inputs = self.tokenizer(
+            processed_inputs = self.processing_class(
                 texts,
                 return_tensors="pt",
                 padding=True,
@@ -207,10 +207,11 @@ class Qwen2VLSFTTrainer(Trainer):
                 add_special_tokens=True,
             )
 
+        device = self.accelerator.device
         # Move to the correct device
         for k, v in processed_inputs.items():
             if isinstance(v, torch.Tensor):
-                processed_inputs[k] = v.to(self.args.device)
+                processed_inputs[k] = v.to(device)
                 
         return processed_inputs
 
