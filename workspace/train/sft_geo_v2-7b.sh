@@ -4,12 +4,12 @@
 
 export DEBUG_MODE="true"
 
-MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2.5-3B-Instruct
-# MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2.5-7B-Instruct
+# MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2.5-3B-Instruct
+MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2.5-7B-Instruct
 DATASET_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/data.jsonl
-OUTPUT=./outputs/sft_geo_v2
-RUN_NAME=Qwen2-VL-2B-SFT-Geomverse-v2
-export LOG_PATH=${OUTPUT}/debug_log_2b.txt
+OUTPUT=./outputs/sft_geo_v2-7b
+RUN_NAME=Qwen2-VL-7B-SFT-Geomverse-v2
+export LOG_PATH=${OUTPUT}/debug_log_7b.txt
 
 rm $LOG_PATH
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/workspace/train
