@@ -56,8 +56,10 @@ def snap_download_dataset(dataset_name):
 
 # snap_download_model("Qwen/Qwen2.5-3B-Instruct")
 # snap_download_model("Qwen/Qwen2.5-7B-Instruct")
-snap_download_model("Qwen/Qwen2.5-14B-Instruct")
+# snap_download_model("Qwen/Qwen2.5-14B-Instruct")
+# snap_download_model("Qwen/Qwen2.5-32B-Instruct")
+snap_download_model("Qwen/Qwen2.5-72B-Instruct")
 
 # from huggingface_hub import hf_hub_download
-# # snapshot_download(repo_id="Jiayi-Pan/Countdown-Tasks-3to4", repo_type="dataset", local_dir="./.temp/datasets/Countdown-Tasks-3to4")
+# snapshot_download(repo_id="Jiayi-Pan/Countdown-Tasks-3to4", repo_type="dataset", local_dir="./.temp/datasets/Countdown-Tasks-3to4")
 # snapshot_download(repo_id="leonardPKU/clevr_cogen_a_train", repo_type="dataset", local_dir="./.temp/datasets/clevr_cogen_a_train")
