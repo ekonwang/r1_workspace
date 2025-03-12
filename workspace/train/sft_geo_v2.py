@@ -184,7 +184,7 @@ def main(script_args, training_args, model_args):
             "completion": [
                 {
                     "role": "assistant",
-                    "content": example["completion"]
+                    "content": example["cot"]
                 },
             ],
             # "prompt": QUESTION_TEMPLATE.format(Question=example["problem"], tikz=example["geometry"]),

@@ -61,7 +61,7 @@ class GeomverseJsonlDataset(Dataset):
                 new_obj['problem'] = obj['question']
                 new_obj['solution'] = f"<answer> {obj['label']} </answer>"
                 new_obj['geometry'] = obj['tikz'] if not mask_coordinates else _mask_coordinates(obj['tikz'])
-                new_obj['completion'] = obj["cot"]
+                new_obj['cot'] = obj["cot"]
                 self.data.append(new_obj)
                 
                 if sample_size is not None:
