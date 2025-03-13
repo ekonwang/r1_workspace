@@ -205,7 +205,7 @@ def _eval_geomverse_(example: dict):
     reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
     reward = cal_reward(reply, example['solution'])
 
-    return {'prompt': example["problem"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['solution']}
+    return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['solution']}
 
 
 def eval_dataset(dataset, output_path, verbose: bool = False):
