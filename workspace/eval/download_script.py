@@ -48,7 +48,7 @@ def snap_download_dataset(dataset_name):
             snapshot_download(
                 repo_id=dataset_name, 
                 repo_type="dataset", 
-                local_dir="./.temp/datasets/" + local_dataset_name
+                local_dir="./.temp/datasets/" + local_dataset_name,
             )
             break 
         except Exception as err:
@@ -58,8 +58,15 @@ def snap_download_dataset(dataset_name):
 # snap_download_model("Qwen/Qwen2.5-7B-Instruct")
 # snap_download_model("Qwen/Qwen2.5-14B-Instruct")
 # snap_download_model("Qwen/Qwen2.5-32B-Instruct")
-snap_download_model("Qwen/Qwen2.5-72B-Instruct")
+# snap_download_model("Qwen/Qwen2.5-72B-Instruct")
 
 # from huggingface_hub import hf_hub_download
 # snapshot_download(repo_id="Jiayi-Pan/Countdown-Tasks-3to4", repo_type="dataset", local_dir="./.temp/datasets/Countdown-Tasks-3to4")
 # snapshot_download(repo_id="leonardPKU/clevr_cogen_a_train", repo_type="dataset", local_dir="./.temp/datasets/clevr_cogen_a_train")
+snap_download_dataset("hiyouga/geometry3k")
+
+if __name__ == "__main__":
+    from datasets import load_dataset
+    PATH = ".temp/datasets/hiyouga_geometry3k/data"
+    dataset = load_dataset(PATH, split="train")
+    import pdb; pdb.set_trace()
