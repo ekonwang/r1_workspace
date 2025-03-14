@@ -75,7 +75,7 @@ class GeomverseJsonlDataset(Dataset):
         return self.data[idx]
 
 
-def load_custom_dataset(file_path, train_split_ratio=0.8, sample_size=None, mask_coordinates=True):
+def load_geomverse_dataset(file_path, train_split_ratio=0.8, sample_size=None, mask_coordinates=True):
     """
     Loads a custom dataset from a JSONL file and splits it into train and test sets.
     
@@ -98,11 +98,16 @@ def load_custom_dataset(file_path, train_split_ratio=0.8, sample_size=None, mask
     
     # Split the dataset into train and test
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
-    # return {
-    #     'train': train_dataset,
-    #     'test': test_dataset
-    # }
     return train_dataset, test_dataset
+
+
+def load_custom_dataset(file_path, train_split_ratio=0.8, sample_size=None, mask_coordinates=True):
+    return load_geomverse_dataset(file_path, 
+        train_split_ratio=train_split_ratio, sample_size=sample_size, mask_coordinates=mask_coordinates)
+
+
+def load_geometry3k_dataset(file_path, sample_size=None):
+    pass
 
 
 if __name__ == "__main__":
@@ -111,42 +116,7 @@ if __name__ == "__main__":
 \coordinate (A) at (11.97204, 15.84669);
 \coordinate (B) at (0, 0);
 \coordinate (C) at (0, 19.8607);
-\pgfmathanglebetweenpoints{\pgfpointanchor{B}{center}}{\pgfpointanchor{A}{center}}
-\let\StartAngle\pgfmathresult
-
-\pgfmathanglebetweenpoints{\pgfpointanchor{B}{center}}{\pgfpointanchor{C}{center}}
-\let\EndAngle\pgfmathresult
-
-\pgfmathsetmacro{\EndAngleUpd}{ifthenelse(\StartAngle > \EndAngle,360+\EndAngle,\EndAngle))}
-\draw[fill=blue,opacity=0.6] (B) -- (A)arc [start angle=\StartAngle, end angle=\EndAngleUpd, radius=19.860697430653072] -- (B);
-\coordinate (D) at (-6.63081, -8.77681);
-\coordinate (E) at (-6.63081, -25.06442);
-\coordinate (F) at (0.0, -16.28761);
-\draw [fill=cyan,opacity=0.6](B)--(D)--(E)--(F)--cycle;
-\coordinate (G) at (6.0, -16.28761);
-\coordinate (H) at (6.0, 0.0);
-\draw [fill=green,opacity=0.6](B)--(F)--(G)--(H);
-\draw [green,opacity=0.2](B)--(H);
-\coordinate (I) at ($(B)!.5!(H)$);
-\pgfmathanglebetweenpoints{\pgfpointanchor{I}{center}}{\pgfpointanchor{H}{center}}
-\let\StartAngle\pgfmathresult
-
-\pgfmathanglebetweenpoints{\pgfpointanchor{I}{center}}{\pgfpointanchor{B}{center}}
-\let\EndAngle\pgfmathresult
-
-\pgfmathsetmacro{\EndAngleUpd}{ifthenelse(\StartAngle > \EndAngle,360+\EndAngle,\EndAngle))}
-\draw[fill=green,opacity=0.6] (H) arc [start angle=\StartAngle, end angle=\EndAngleUpd, radius=3.0];
-\coordinate (J) at (-8.77681, 6.63081);
-\coordinate (K) at (-15.40762, -2.146);
-\draw [fill=gray,opacity=0.6](B)--(J)--(K)--(D)--cycle;
-\draw (11.97204, 15.84669) -- node[right,xshift=5mm,pos=2.31472,font=\Huge](){A}(11.97204, 15.84669);
-\draw (0, 0) -- node[below,yshift=-5mm,pos=3.26395,font=\Huge](){B}(0, 0);
-\draw (0, 19.8607) -- node[above,yshift=5mm,pos=2.31472,font=\Huge](){C}(0, 19.8607);
-\draw (-6.63081, -8.77681) -- node[below,yshift=-5mm,pos=6.04436,font=\Huge](){D}(-6.63081, -8.77681);
-\draw (-6.63081, -25.06442) -- node[below,yshift=-5mm,pos=10.00026,font=\Huge](){E}(-6.63081, -25.06442);
-\draw (0.0, -16.28761) -- node[below,yshift=-5mm,pos=7.4025,font=\Huge](){F}(0.0, -16.28761);
-\draw (6.0, -16.28761) -- node[below,yshift=-5mm,pos=7.34801,font=\Huge](){G}(6.0, -16.28761);
-\draw (6.0, 0.0) -- node[below,yshift=-5mm,pos=3.13843,font=\Huge](){H}(6.0, 0.0);
+...
 \draw (-8.77681, 6.63081) -- node[left,xshift=-5mm,pos=3.59138,font=\Huge](){J}(-8.77681, 6.63081);
 \draw (-15.40762, -2.146) -- node[left,xshift=-5mm,pos=6.22728,font=\Huge](){K}(-15.40762, -2.146);
 """

@@ -260,7 +260,7 @@ dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D2/data.jsonl', tra
 
 vlm_evaluator = VLMEval(
     model_name=MODEL_PATH,
-    tensor_parallel_size=4,
+    tensor_parallel_size=2,
     gpu_memory_utilization=0.9
 )
 print_error(MODEL_PATH)
