@@ -9,14 +9,15 @@ from utils import load_jsonl, save_jsonl, print_error, mk_len_pbar
 from time import sleep
 from rich.progress import track, Progress
 from utils import llm_config, chat_vlm
+import argparse
 
 import torch
-from typing import List, Dict, Union, Optional, Any
+from typing import List, Dict, Union, Optional, Any, Callable
 from vllm import LLM, SamplingParams
 from PIL import Image
 import base64
 from io import BytesIO
-from utils_data import load_custom_dataset
+from utils_data import load_custom_dataset, load_geometry3k_dataset
 from math_verify import parse, verify
 
 from transformers import AutoTokenizer
@@ -133,11 +134,66 @@ def _generate_model_name(model_name: str):
     model_name = model_name.split("/")[-2:]
     return '-'.join(model_name)
 
-# reply, messages = chat_gpt4o("Could you please give me a list of all the countries in the world?")
-# print(reply)
-def eval_question(messages: List[Dict]):
-    reply, _ = vlm_evaluator.chat_vlm(messages)
-    return reply
+
+def _eval_geometry3k_(example: dict):
+    QUESTION_TEMPLATE = "{problem}  Output the thinking process in <think> </think> and final answer (the option letter) in <answer> </answer> tags.\n\n\n"\
+        "Here is the logic form for the geometry problem:```\n{logic_form}\n```"
+
+    def make_conversation_image(example):
+        problem = f"""
+{example["problem"]}
+
+A. {example["choices"][0]}
+B. {example["choices"][1]}
+C. {example["choices"][2]}
+D. {example["choices"][3]}
+"""
+        logic_form = "\n".join(example["diagram_logic_form"]) + "\n"
+        logic_form += "\n".join(example["dissolved_text_logic_form"])
+        logic_form += "\nThe line instances are: " + ", ".join(example["line_instances"])
+
+        return {
+            "prompt": [
+                {
+                    "role": "user",
+                    "content": QUESTION_TEMPLATE.format(problem=problem, logic_form=logic_form)
+                },
+            ],
+        }
+
+    def cal_reward(content, sol):
+        reward = 0.0
+        # Try symbolic verification first
+        try:
+            answer = parse(content)
+            if float(verify(answer, parse(sol))) > 0:
+                reward = 1.0
+        except Exception:
+            pass  # Continue to next verification method if this fails
+
+        return reward
+
+    example['prompt'] = make_conversation_image(example)['prompt']
+
+    # BON evaluation
+    bon_replies = []
+    bon_reward = 0.0
+    for i in range(3):
+        sampling_params = SamplingParams(
+            temperature=0.8,
+            top_p=1.0,
+            max_tokens=1024
+        )
+        reply, _ = vlm_evaluator.chat_vlm(example['prompt'], sampling_params)
+        bon_replies.append(reply)
+        bon_reward = cal_reward(reply, example['solution'])
+        if bon_reward == 1.0:
+            break
+
+    reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
+    reward = cal_reward(reply, example['solution'])
+
+    return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['solution']}
 
 
 def _eval_geomverse_(example: dict):
@@ -208,7 +264,7 @@ def _eval_geomverse_(example: dict):
     return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['solution']}
 
 
-def eval_dataset(dataset, output_path, verbose: bool = False):
+def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callable = _eval_geomverse_):
     tot_acc = {'bon': 0, 'reward': 0}
     tot_eval = 0
     all_eval_data = []
@@ -221,7 +277,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
             element = dataset[element_id]
 
             try:
-                eval_dict = _eval_geomverse_(element)
+                eval_dict = eval_func(element)
             except Exception as err:
                 raise err
                 if 'keyboard' in str(err).lower():
@@ -243,29 +299,57 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
                 all_eval_data.append(eval_dict)
                 save_jsonl(all_eval_data, output_path, use_tqdm=False)
             
-            # pbar.update(1)
-            # pbar.set_description(f'Evaluating: {tot_acc / tot_eval * 100:.2f} ({tot_acc:6d}/{tot_eval:6d})')
             progress.update(task_id, advance=1)
             progress.update(task_id, description=f'Evaluating: BoN@3 {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | Pass@1 {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})')
 
         return f'Evaluating: BoN@3 {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | Pass@1 {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})'
 
-# Qwen-2.5-Instruct evaluation
-MODEL_PATH = sys.argv[1]  # Use the correct path for Qwen-2.5-Instruct
-# OUTPUT_PATH = f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl'
-# dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1, sample_size=120)
 
-OUTPUT_PATH = f'.temp/outputs/GeomVerse/D2/{_generate_model_name(MODEL_PATH)}.jsonl'
-dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D2/data.jsonl', train_split_ratio=1, sample_size=120)
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--model_path", type=str, required=True, default='Qwen/Qwen2.5-Instruct')
+    parser.add_argument("--output_path", type=str, required=True, default='.temp/outputs')
+    parser.add_argument("--dataset_path", type=str, required=True, default='Geomverse-D2')
+    return parser.parse_args()
 
-vlm_evaluator = VLMEval(
-    model_name=MODEL_PATH,
-    tensor_parallel_size=2,
-    gpu_memory_utilization=0.9
-)
-print_error(MODEL_PATH)
-result = eval_dataset(dataset, OUTPUT_PATH, True)
 
-with open(OUTPUT_PATH.replace('.jsonl', '.log'), 'w') as f:
-    f.write(f'{MODEL_PATH}\n')
-    f.write(f'{result}\n')
+if __name__ == "__main__":
+    args = parse_args()
+    # Qwen-2.5-Instruct evaluation
+    MODEL_PATH = args.model_path  # Use the correct path for Qwen-2.5-Instruct
+    # OUTPUT_PATH = f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl'
+    # dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1, sample_size=120)
+
+    DATASET_CONFIGS = {
+        "Geomverse-D2": {
+            "output_path": "GeomVerse/D2",
+            "load_path": ".temp/datasets/GeomVerse/TEST/D2/data.jsonl",
+        },
+        "InterGPS-Geometry3K": {
+            "output_path": "Geometry3K",
+            "load_path": ".temp/datasets/intergpt_geometry3k",
+        }
+    }
+
+    OUTPUT_PATH = f'{args.output_path}/{DATASET_CONFIGS[args.dataset_path]["output_path"]}/{_generate_model_name(MODEL_PATH)}.jsonl'
+
+    if args.dataset_path == "Geomverse-D2":
+        dataset = load_custom_dataset(DATASET_CONFIGS[args.dataset_path]["load_path"], train_split_ratio=1, sample_size=120)
+    elif args.dataset_path == "InterGPS-Geometry3K":
+        dataset = load_geometry3k_dataset(DATASET_CONFIGS[args.dataset_path]["load_path"], sample_size=500)['test']
+    
+    vlm_evaluator = VLMEval(
+        model_name=MODEL_PATH,
+        tensor_parallel_size=2,
+        gpu_memory_utilization=0.9
+    )
+    print_error(MODEL_PATH)
+
+    if args.dataset_path == "Geomverse-D2":
+        result = eval_dataset(dataset, OUTPUT_PATH, True, _eval_geomverse_)
+    elif args.dataset_path == "InterGPS-Geometry3K":
+        result = eval_dataset(dataset, OUTPUT_PATH, True, _eval_geometry3k_)
+
+    with open(OUTPUT_PATH.replace('.jsonl', '.log'), 'w') as f:
+        f.write(f'{MODEL_PATH}\n')
+        f.write(f'{result}\n')

@@ -8,6 +8,11 @@ from tqdm import tqdm
 import re
 
 
+def load_json_file(file_path):
+    with open(file_path, 'r') as f:
+        return json.load(f)
+
+
 def _mask_coordinates(tikz_code):
     """
     将 TikZ 代码中的所有具体坐标数值替换为 [MASK_VALUE]。
@@ -75,6 +80,51 @@ class GeomverseJsonlDataset(Dataset):
         return self.data[idx]
 
 
+class Geometry3kDataset(Dataset):
+    def __init__(self, file_path, sample_size=None):
+        """
+        Args:
+            file_path (str): Path to the JSONL file.
+        """
+        assert sample_size is None or (isinstance(sample_size, int) and sample_size > 0)
+
+        self.subdirs = sorted(os.listdir(file_path))
+        if sample_size is not None:
+            self.subdirs = self.subdirs[:sample_size]
+
+        self.data = []
+        for subdir in self.subdirs:
+            subdir_path = os.path.join(file_path, subdir)
+            if os.path.isdir(subdir_path):
+                self.data.append(subdir_path)
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        subdir_path = self.data[idx]
+        img_path = os.path.join(subdir_path, 'img_diagram_point.png')
+        data = load_json_file(os.path.join(subdir_path, 'data.json'))
+        logic_form = load_json_file(os.path.join(subdir_path, 'logic_form.json'))
+
+        problem = data['problem_text']
+        choices = data['choices']
+        answer = data['answer']
+        diagram_logic_form = logic_form["diagram_logic_form"]
+        line_instances = logic_form["line_instances"]
+        dissolved_text_logic_form = logic_form["dissolved_text_logic_form"]
+        
+        return {
+            "image": Image.open(img_path),
+            "problem": problem,
+            "choices": choices,
+            "answer": answer,
+            "diagram_logic_form": diagram_logic_form,
+            "line_instances": line_instances,
+            "dissolved_text_logic_form": dissolved_text_logic_form,
+        }
+
+
 def load_geomverse_dataset(file_path, train_split_ratio=0.8, sample_size=None, mask_coordinates=True):
     """
     Loads a custom dataset from a JSONL file and splits it into train and test sets.
@@ -107,7 +157,12 @@ def load_custom_dataset(file_path, train_split_ratio=0.8, sample_size=None, mask
 
 
 def load_geometry3k_dataset(file_path, sample_size=None):
-    pass
+    train_dataset = Geometry3kDataset(os.path.join(file_path, 'train'), sample_size=sample_size)
+    test_dataset = Geometry3kDataset(os.path.join(file_path, 'test'), sample_size=sample_size)
+    return {
+        'train': train_dataset,
+        'test': test_dataset,
+    }
 
 
 if __name__ == "__main__":
