@@ -118,7 +118,7 @@ class Geometry3kDataset(Dataset):
             "image": Image.open(img_path),
             "problem": problem,
             "choices": choices,
-            "answer": answer,
+            "answer": f"<answer> {answer} </answer>",
             "diagram_logic_form": diagram_logic_form,
             "line_instances": line_instances,
             "dissolved_text_logic_form": dissolved_text_logic_form,

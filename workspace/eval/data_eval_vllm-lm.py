@@ -114,7 +114,6 @@ class VLMEval:
         outputs = self.llm.generate(
             processed_prompt,
             sampling_params=sampling_params,
-            prompt_token_ids=None,
         )
         
         # Extract the generated text
@@ -165,8 +164,14 @@ D. {example["choices"][3]}
         reward = 0.0
         # Try symbolic verification first
         try:
-            answer = parse(content)
-            if float(verify(answer, parse(sol))) > 0:
+            sol_match = re.search(r'<answer>(.*?)</answer>', sol, re.DOTALL)
+            ground_truth = sol_match.group(1).strip() if sol_match else sol.strip()
+            
+            # Extract answer from content if it has think/answer tags
+            content_match = re.search(r'<answer>(.*?)</answer>', content, re.DOTALL)
+            student_answer = content_match.group(1).strip() if content_match else content.strip()
+
+            if ground_truth == student_answer:
                 reward = 1.0
         except Exception:
             pass  # Continue to next verification method if this fails
@@ -186,14 +191,14 @@ D. {example["choices"][3]}
         )
         reply, _ = vlm_evaluator.chat_vlm(example['prompt'], sampling_params)
         bon_replies.append(reply)
-        bon_reward = cal_reward(reply, example['solution'])
+        bon_reward = cal_reward(reply, example['answer'])
         if bon_reward == 1.0:
             break
 
     reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
-    reward = cal_reward(reply, example['solution'])
+    reward = cal_reward(reply, example['answer'])
 
-    return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['solution']}
+    return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['answer']}
 
 
 def _eval_geomverse_(example: dict):
@@ -224,11 +229,11 @@ def _eval_geomverse_(example: dict):
         if reward == 0.0:
             try:
                 # Extract answer from solution if it has think/answer tags
-                sol_match = re.search(r'<answer>(.*?)</answer>', sol)
+                sol_match = re.search(r'<answer>(.*?)</answer>', sol, re.DOTALL)
                 ground_truth = sol_match.group(1).strip() if sol_match else sol.strip()
                 
                 # Extract answer from content if it has think/answer tags
-                content_match = re.search(r'<answer>(.*?)</answer>', content)
+                content_match = re.search(r'<answer>(.*?)</answer>', content, re.DOTALL)
                 student_answer = content_match.group(1).strip() if content_match else content.strip()
                 
                 # Compare the extracted answers
@@ -307,9 +312,9 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model_path", type=str, required=True, default='Qwen/Qwen2.5-Instruct')
-    parser.add_argument("--output_path", type=str, required=True, default='.temp/outputs')
-    parser.add_argument("--dataset_path", type=str, required=True, default='Geomverse-D2')
+    parser.add_argument("--model_path", type=str, required=True, default='.temp/models/Qwen_Qwen2.5-3B-Instruct')
+    parser.add_argument("--output_path", type=str, default='.temp/outputs')
+    parser.add_argument("--dataset_path", type=str, default='Geomverse-D2')
     return parser.parse_args()
 
 
@@ -336,7 +341,7 @@ if __name__ == "__main__":
     if args.dataset_path == "Geomverse-D2":
         dataset = load_custom_dataset(DATASET_CONFIGS[args.dataset_path]["load_path"], train_split_ratio=1, sample_size=120)
     elif args.dataset_path == "InterGPS-Geometry3K":
-        dataset = load_geometry3k_dataset(DATASET_CONFIGS[args.dataset_path]["load_path"], sample_size=500)['test']
+        dataset = load_geometry3k_dataset(DATASET_CONFIGS[args.dataset_path]["load_path"], sample_size=248)['test']
     
     vlm_evaluator = VLMEval(
         model_name=MODEL_PATH,
