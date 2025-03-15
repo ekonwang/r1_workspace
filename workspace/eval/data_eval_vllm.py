@@ -298,6 +298,17 @@ def eval_dataset(dataset, output_path, verbose: bool = False):
         return None
 
 
+def clean_up():
+    # Ensure proper cleanup of vLLM resources
+    if 'vlm_evaluator' in locals() and vlm_evaluator is not None:
+        # Explicitly delete the LLM instance to release resources
+        if hasattr(vlm_evaluator, 'llm'):
+            del vlm_evaluator.llm
+        del vlm_evaluator
+    
+    # Force garbage collection to clean up any remaining references
+    import gc
+    gc.collect()
 
 # MODEL_PATH = '/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2-VL-2B-Instruct'
 # vlm_evaluator = VLMEval(
@@ -317,3 +328,5 @@ vlm_evaluator = VLMEval(
 )
 dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1)
 eval_dataset(dataset, f'.temp/outputs/GeomVerse/D1/{_generate_model_name(MODEL_PATH)}.jsonl', True)
+
+clean_up()

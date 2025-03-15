@@ -318,6 +318,19 @@ def parse_args():
     return parser.parse_args()
 
 
+def clean_up():
+    # Ensure proper cleanup of vLLM resources
+    if 'vlm_evaluator' in locals() and vlm_evaluator is not None:
+        # Explicitly delete the LLM instance to release resources
+        if hasattr(vlm_evaluator, 'llm'):
+            del vlm_evaluator.llm
+        del vlm_evaluator
+    
+    # Force garbage collection to clean up any remaining references
+    import gc
+    gc.collect()
+
+
 if __name__ == "__main__":
     args = parse_args()
     # Qwen-2.5-Instruct evaluation
@@ -358,3 +371,5 @@ if __name__ == "__main__":
     with open(OUTPUT_PATH.replace('.jsonl', '.log'), 'w') as f:
         f.write(f'{MODEL_PATH}\n')
         f.write(f'{result}\n')
+
+    clean_up()
