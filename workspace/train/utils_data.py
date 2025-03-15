@@ -6,6 +6,7 @@ from PIL import Image
 import json
 from tqdm import tqdm
 import re
+from datasets import load_dataset
 
 
 def load_json_file(file_path):
@@ -159,6 +160,20 @@ def load_custom_dataset(file_path, train_split_ratio=0.8, sample_size=None, mask
 def load_geometry3k_dataset(file_path, sample_size=None):
     train_dataset = Geometry3kDataset(os.path.join(file_path, 'train'), sample_size=sample_size)
     test_dataset = Geometry3kDataset(os.path.join(file_path, 'test'), sample_size=sample_size)
+    return {
+        'train': train_dataset,
+        'test': test_dataset,
+    }
+
+
+def load_mmlu_dataset(file_path='cais/mmlu', sample_size=None):
+    dataset = load_dataset(file_path, trust_remote_code=True)
+    train_dataset = dataset['train']
+    test_dataset = dataset['test']
+    if sample_size is not None:
+        # random sample
+        train_dataset = train_dataset.shuffle(seed=7).select(range(sample_size))
+        test_dataset = test_dataset.shuffle(seed=7).select(range(sample_size))
     return {
         'train': train_dataset,
         'test': test_dataset,

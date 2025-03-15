@@ -17,7 +17,7 @@ from vllm import LLM, SamplingParams
 from PIL import Image
 import base64
 from io import BytesIO
-from utils_data import load_custom_dataset, load_geometry3k_dataset
+from utils_data import load_custom_dataset, load_geometry3k_dataset, load_mmlu_dataset
 from math_verify import parse, verify
 
 from transformers import AutoTokenizer
@@ -201,6 +201,71 @@ D. {example["choices"][3]}
     return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['answer']}
 
 
+def _eval_mmlu_(example: dict):
+    QUESTION_TEMPLATE = "{problem}  Output the thinking process in <think> </think> and final answer (the option letter) in <answer> </answer> tags."
+
+    def make_conversation_image(example):
+        problem = f"""
+{example["question"]}
+
+A. {example["choices"][0]}
+B. {example["choices"][1]}
+C. {example["choices"][2]}
+D. {example["choices"][3]}
+"""
+
+        return {
+            "prompt": [
+                {
+                    "role": "user",
+                    "content": QUESTION_TEMPLATE.format(problem=problem)
+                },
+            ],
+        }
+
+    def cal_reward(content, sol):
+        reward = 0.0
+        # Try symbolic verification first
+        try:
+            sol_match = re.search(r'<answer>(.*?)</answer>', sol, re.DOTALL)
+            ground_truth = sol_match.group(1).strip() if sol_match else sol.strip()
+            
+            # Extract answer from content if it has think/answer tags
+            content_match = re.search(r'<answer>(.*?)</answer>', content, re.DOTALL)
+            student_answer = content_match.group(1).strip() if content_match else content.strip()
+
+            if ground_truth == student_answer:
+                reward = 1.0
+        except Exception:
+            pass  # Continue to next verification method if this fails
+
+        return reward
+
+    example['prompt'] = make_conversation_image(example)['prompt']
+    answer_idx = int(example['answer'])
+    solution = f"<answer> {['A', 'B', 'C', 'D'][answer_idx]} </answer>"
+
+    # BON evaluation
+    bon_replies = []
+    bon_reward = 0.0
+    for i in range(3):
+        sampling_params = SamplingParams(
+            temperature=0.8,
+            top_p=1.0,
+            max_tokens=1024
+        )
+        reply, _ = vlm_evaluator.chat_vlm(example['prompt'], sampling_params)
+        bon_replies.append(reply)
+        bon_reward = cal_reward(reply, solution)
+        if bon_reward == 1.0:
+            break
+
+    reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
+    reward = cal_reward(reply, solution)
+
+    return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': solution}
+
+
 def _eval_geomverse_(example: dict):
     QUESTION_TEMPLATE = "{Question}  Output the thinking process in <think> </think> and final answer (number) in <answer> </answer> tags.\n\n\n"\
         "Here is the tikz code for the geometry problem:```\n{tikz}\n```"
@@ -346,6 +411,10 @@ if __name__ == "__main__":
         "InterGPS-Geometry3K": {
             "output_path": "Geometry3K",
             "load_path": ".temp/datasets/intergpt_geometry3k",
+        },
+        "MMLU": {
+            "output_path": "MMLU",
+            "load_path": "cais/mmlu",
         }
     }
 
@@ -355,6 +424,8 @@ if __name__ == "__main__":
         dataset = load_custom_dataset(DATASET_CONFIGS[args.dataset_path]["load_path"], train_split_ratio=1, sample_size=120)
     elif args.dataset_path == "InterGPS-Geometry3K":
         dataset = load_geometry3k_dataset(DATASET_CONFIGS[args.dataset_path]["load_path"], sample_size=248)['test']
+    elif args.dataset_path == "MMLU":
+        dataset = load_mmlu_dataset(DATASET_CONFIGS[args.dataset_path]["load_path"], sample_size=150)['test']
     
     vlm_evaluator = VLMEval(
         model_name=MODEL_PATH,
@@ -367,6 +438,8 @@ if __name__ == "__main__":
         result = eval_dataset(dataset, OUTPUT_PATH, True, _eval_geomverse_)
     elif args.dataset_path == "InterGPS-Geometry3K":
         result = eval_dataset(dataset, OUTPUT_PATH, True, _eval_geometry3k_)
+    elif args.dataset_path == "MMLU":
+        result = eval_dataset(dataset, OUTPUT_PATH, True, _eval_mmlu_)
 
     with open(OUTPUT_PATH.replace('.jsonl', '.log'), 'w') as f:
         f.write(f'{MODEL_PATH}\n')
