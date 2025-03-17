@@ -167,9 +167,11 @@ def load_geometry3k_dataset(file_path, sample_size=None):
 
 
 def load_mmlu_dataset(file_path='cais/mmlu', sample_size=None):
-    dataset = load_dataset(file_path, trust_remote_code=True)
-    train_dataset = dataset['train']
-    test_dataset = dataset['test']
+    # dataset = load_dataset(file_path, 'all', trust_remote_code=True)
+    train_dataset = load_dataset(file_path, 'all', split='test', trust_remote_code=True)
+    test_dataset = load_dataset(file_path, 'all', split='test', trust_remote_code=True)
+    # train_dataset = dataset['train']
+    # test_dataset = dataset['test']
     if sample_size is not None:
         # random sample
         train_dataset = train_dataset.shuffle(seed=7).select(range(sample_size))
