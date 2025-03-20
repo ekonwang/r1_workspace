@@ -28,3 +28,6 @@
 [submodule "DeepSpeed"]
 	path = DeepSpeed
 	url = https://github.com/deepspeedai/DeepSpeed.git
+[submodule "OpenRLHF"]
+	path = OpenRLHF
+	url = git@github.com:OpenRLHF/OpenRLHF.git
