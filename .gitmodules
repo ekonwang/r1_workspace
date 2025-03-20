@@ -31,3 +31,6 @@
 [submodule "OpenRLHF"]
 	path = OpenRLHF
 	url = git@github.com:OpenRLHF/OpenRLHF.git
+[submodule "MM-EUREKA"]
+	path = MM-EUREKA
+	url = git@github.com:ModalMinds/MM-EUREKA.git
