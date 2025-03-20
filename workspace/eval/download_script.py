@@ -8,22 +8,6 @@ from utils import print_error
 os.chdir(os.path.dirname(os.path.abspath(__file__)) + '/../..')
 print(os.getcwd())
 
-# # Benchmarks
-# dataset = load_dataset("di-zhang-fdu/AIME_1983_2024")
-# dataset = load_dataset("di-zhang-fdu/MATH500")
-# dataset = load_dataset("hendrydong/gpqa_diamond")
-# dataset = load_dataset("cais/mmlu", "all")
-# dataset = load_dataset("princeton-nlp/SWE-bench_Verified")
-
-# # Alignment Dataset
-# dataset = load_dataset("Jiayi-Pan/Countdown-Tasks-3to4")
-
-# model_name = "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B"
-# model_name = "Qwen/Qwen2.5-3B"
-# model_name = "Qwen/Qwen2.5-3B-Instruct"
-# model_name = "HuanjinYao/Mulberry_qwen2vl_7b"
-# model_name = "Qwen/Qwen2.5-3B-Instruct"
-
 def snap_download_model(model_name):
     # model_name = "Qwen/Qwen2-VL-2B-Instruct"
     local_model_name = model_name.replace("/", "_")
@@ -32,7 +16,6 @@ def snap_download_model(model_name):
         try:
             model_path = snapshot_download(
                 repo_id=model_name,  # The model ID on Hugging Face Hub
-                # cache_dir="./.temp/models",  # Local directory to save the model
                 local_dir="./.temp/models/" + local_model_name  # Specific directory for this model
             )
             break 
@@ -59,14 +42,9 @@ def snap_download_dataset(dataset_name):
 # snap_download_model("Qwen/Qwen2.5-14B-Instruct")
 # snap_download_model("Qwen/Qwen2.5-32B-Instruct")
 # snap_download_model("Qwen/Qwen2.5-72B-Instruct")
+snap_download_model("OpenRLHF/Llama-3-8b-sft-mixture")
 
-# from huggingface_hub import hf_hub_download
 # snapshot_download(repo_id="Jiayi-Pan/Countdown-Tasks-3to4", repo_type="dataset", local_dir="./.temp/datasets/Countdown-Tasks-3to4")
 # snapshot_download(repo_id="leonardPKU/clevr_cogen_a_train", repo_type="dataset", local_dir="./.temp/datasets/clevr_cogen_a_train")
-snap_download_dataset("hiyouga/geometry3k")
-
-if __name__ == "__main__":
-    from datasets import load_dataset
-    PATH = ".temp/datasets/hiyouga_geometry3k/data"
-    dataset = load_dataset(PATH, split="train")
-    import pdb; pdb.set_trace()
+# snap_download_dataset("hiyouga/geometry3k")
+snap_download_dataset("OpenRLHF/preference_dataset_mixture2_and_safe_pku")
