@@ -20,7 +20,8 @@ def format_data(data):
     ]
     return {
         'conversations': conversations,
-        'answer': answer
+        'prompt': user_prompt,
+        'answer': answer,
     }
 
 new_data = []

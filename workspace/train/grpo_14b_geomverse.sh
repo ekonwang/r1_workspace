@@ -1,6 +1,6 @@
 set -x
 
-OUTPUT_DIR='./outputs'
+OUTPUT_DIR='./outputs/v3-grpo-14b'
 
 export RAY_MASTER_PORT=6379
 export REWARD_LOG_PATH="${OUTPUT_DIR}/reward.log"
@@ -26,7 +26,7 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --vllm_gpu_memory_utilization 0.7 \
   --vllm_enable_sleep \
   --colocate_all_models \
-  --pretrain .temp/models/Qwen_Qwen2.5-14B-Instruct \
+  --pretrain .temp/models/Qwen_Qwen2.5-3B-Instruct \
   --remote_rm_url workspace/train/reward_func.py \
   --save_path ${OUTPUT_DIR} \
   --micro_train_batch_size 1 \
@@ -43,9 +43,11 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --zero_stage 3 \
   --bf16 \
   --actor_learning_rate 3e-7 \
-  --advantage_estimator rloo \
+  --advantage_estimator group_norm \
   --init_kl_coef 0.01 \
-  --prompt_data  \
+  --prompt_data .temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/grpo_conversations.jsonl \
+  --input_key 'prompt' \
+  --label_key 'answer' \
   --apply_chat_template \
   --disable_fast_tokenizer \
   --normalize_reward \
