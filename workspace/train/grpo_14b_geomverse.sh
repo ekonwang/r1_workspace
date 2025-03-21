@@ -16,7 +16,7 @@ sleep 1
 ray start --head  --port=$RAY_MASTER_PORT 
 sleep 5
 
-python3 -m  openrlhf.cli.train_ppo_ray \
+python3 -m openrlhf.cli.train_ppo_ray \
   --actor_num_nodes 1 \
   --actor_num_gpus_per_node 4 \
   --ref_num_nodes 1 \
@@ -26,17 +26,17 @@ python3 -m  openrlhf.cli.train_ppo_ray \
   --vllm_gpu_memory_utilization 0.7 \
   --vllm_enable_sleep \
   --colocate_all_models \
-  --pretrain ../.temp/models/OpenGVLab_InternVL2_5-8B \
-  --remote_rm_url examples/scripts/reward_func_internvl_instruct.py \
+  --pretrain .temp/models/Qwen_Qwen2.5-14B-Instruct \
+  --remote_rm_url workspace/train/reward_func.py \
   --save_path ${OUTPUT_DIR} \
   --micro_train_batch_size 1 \
   --train_batch_size 64 \
   --micro_rollout_batch_size 2 \
   --rollout_batch_size 128 \
   --temperature 1.0 \
-  --n_samples_per_prompt 8 \
+  --n_samples_per_prompt 6 \
   --max_epochs 1 \
-  --max_samples 100000 \
+  --max_samples 1000000 \
   --num_episodes 1 \
   --prompt_max_len 2048 \
   --generate_max_len 4096 \
@@ -44,8 +44,8 @@ python3 -m  openrlhf.cli.train_ppo_ray \
   --bf16 \
   --actor_learning_rate 3e-7 \
   --advantage_estimator rloo \
-  --init_kl_coef 0.0 \
-  --prompt_data ../.temp/datasets/FanqingM_MM-Eureka-Dataset/dataset_abspath.jsonl \
+  --init_kl_coef 0.01 \
+  --prompt_data  \
   --apply_chat_template \
   --disable_fast_tokenizer \
   --normalize_reward \

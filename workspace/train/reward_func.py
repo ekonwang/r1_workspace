@@ -41,6 +41,13 @@ def accuracy_reward_func(completion, answer):
         except Exception:
             pass
 
+        try:
+            # relax the tolerance for geomverse
+            if abs(float(answer_parsed) - float(gold_parsed)) < 2e-2 * abs(float(gold_parsed)):
+                reward = 1.0
+        except Exception:
+            pass
+
         if reward == 0.0:
             try:
                 content_match = re.search(r"<answer>(.*?)</answer>", completion)
@@ -58,21 +65,14 @@ def accuracy_reward_func(completion, answer):
         reward = 1.0
         print("Failed to parse gold solution: ", sol)
 
-    return reward, answer_parsed
+    return reward
 
 
 def format_reward_func(completion, **kwargs):
-    pattern = (
-        r"^(?=(?:.*<think>){1})(?=(?:.*<\/think>){1})"
-        r"(?=(?:.*<answer>){1})(?=(?:.*<\/answer>){1})"
-        r"(?!.*<think>.*<think>)"
-        r"(?!.*<\/think>.*<\/think>)"
-        r"(?!.*<answer>.*<answer>)"
-        r"(?!.*<\/answer>.*<\/answer>)"
-        r".*<think>(.+?)</think>\s*<answer>.+?</answer>.*$"
-    )
-    matches = re.search(pattern, completion, re.DOTALL)
-    return 0.5 if matches else 0.0
+    """Reward function that checks if the completion has a specific format."""
+    pattern = r"<think>.*?</think>\s*<answer>.*?</answer>"
+    match = re.fullmatch(pattern, completion, re.DOTALL)
+    return 0.5 if match else 0.0
 
 
 def reward_func(queries, prompts):
@@ -89,13 +89,10 @@ def reward_func(queries, prompts):
         f.write(f"----------------------------- {current_time} -----------------------------\n")
         for query, prompt in zip(queries, prompts):
             try:
-                query = re.sub(r"\s*<IMG_CONTEXT>\s*", "", query)
-                query = re.sub(r"<img>\s*</img>", " <image>", query)
-                query = re.sub("</s>", "", query)
                 response = re.search(pattern, query, re.DOTALL).group(1).strip()
                 answer = prompt["answer"]
 
-                accuracy_reward, answer_parsed = accuracy_reward_func(response, answer)
+                accuracy_reward = accuracy_reward_func(response, answer)
                 format_reward = format_reward_func(response)
                 repetition_penalty = 0.0
 
