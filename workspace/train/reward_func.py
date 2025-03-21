@@ -75,7 +75,7 @@ def format_reward_func(completion, **kwargs):
     return 0.5 if match else 0.0
 
 
-def reward_func(queries, prompts):
+def reward_func(queries, prompts, labels):
     # queries is prompts + responses
 
     current_time = datetime.now().strftime("%d-%H-%M-%S-%f")
@@ -87,10 +87,10 @@ def reward_func(queries, prompts):
 
     with open(LOG_PATH, "a") as f:
         f.write(f"----------------------------- {current_time} -----------------------------\n")
-        for query, prompt in zip(queries, prompts):
+        for query, prompt, label in zip(queries, prompts, labels):
             try:
                 response = re.search(pattern, query, re.DOTALL).group(1).strip()
-                answer = prompt["answer"]
+                answer = label
 
                 accuracy_reward = accuracy_reward_func(response, answer)
                 format_reward = format_reward_func(response)
