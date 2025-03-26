@@ -57,10 +57,6 @@ class GRPOScriptArguments(ScriptArguments):
         default=None,
         metadata={"help": "Exact number of loaded dataset samples"},
     )
-    learning_rate: Optional[float] = field(
-        default=3e-7,
-        metadata={"help": "Learning rate"},
-    )
 
 
 def accuracy_reward(completions, solution, **kwargs):

@@ -5,14 +5,14 @@
 export DEBUG_MODE="true"
 
 # MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2.5-3B-Instruct
-MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2.5-7B-Instruct
+MODEL_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/models/Qwen_Qwen2.5-14B-Instruct
 DATASET_NAME=/inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/.temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/data.jsonl
-OUTPUT=./outputs/sft_geo_v2-7b
-RUN_NAME=Qwen2-VL-7B-SFT-Geomverse-v2
-export LOG_PATH=${OUTPUT}/debug_log_7b.txt
+OUTPUT=./outputs/sft_geo_v4-14b
+RUN_NAME=Qwen2-VL-14B-SFT-Geomverse-v2
+export LOG_PATH=${OUTPUT}/debug_log_14b.txt
 
 rm $LOG_PATH
-cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/workspace/train
+cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace/workspace/train_r1v
 
 mkdir -p $OUTPUT
 torchrun --nproc_per_node="4" \
