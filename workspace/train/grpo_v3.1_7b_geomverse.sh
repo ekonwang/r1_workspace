@@ -43,7 +43,7 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --temperature 1.0 \
   --n_samples_per_prompt 8 \
   --max_epochs 1 \
-  --max_samples 8000 \
+  --max_samples 100000 \
   --num_episodes 1 \
   --prompt_max_len 2048 \
   --generate_max_len 4096 \
