@@ -114,9 +114,10 @@ def reward_func(queries, prompts, labels):
                 format_rewards.append(0.0)
                 repetition_penalties.append(0.0)
 
-    return {
-        "rewards": torch.tensor(rewards, dtype=torch.float32),
-        "accuracy_rewards": torch.tensor(accuracy_rewards, dtype=torch.float32),
-        "format_rewards": torch.tensor(format_rewards, dtype=torch.float32),
-        "repetition_penalties": torch.tensor(repetition_penalties, dtype=torch.float32),
-    }
+    # return {
+    #     "rewards": torch.tensor(rewards, dtype=torch.float32),
+    #     "accuracy_rewards": torch.tensor(accuracy_rewards, dtype=torch.float32),
+    #     "format_rewards": torch.tensor(format_rewards, dtype=torch.float32),
+    #     "repetition_penalties": torch.tensor(repetition_penalties, dtype=torch.float32),
+    # }
+    return torch.tensor(rewards, dtype=torch.float32)

@@ -3,7 +3,7 @@ set -x
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace
 source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/bin/activate /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/envs/open-rlhf
 
-OUTPUT_DIR='./outputs/v3.1-grpo-14b'
+OUTPUT_DIR='./outputs/v3.1-grpo-7b'
 
 export RAY_MASTER_PORT=6379
 export REWARD_LOG_PATH="${OUTPUT_DIR}/reward.log"
@@ -25,15 +25,15 @@ sleep 5
 
 python3 -m openrlhf.cli.train_ppo_ray \
   --actor_num_nodes 1 \
-  --actor_num_gpus_per_node 8 \
+  --actor_num_gpus_per_node 4 \
   --ref_num_nodes 1 \
-  --ref_num_gpus_per_node 8 \
-  --vllm_num_engines 4 \
+  --ref_num_gpus_per_node 4 \
+  --vllm_num_engines 2 \
   --vllm_tensor_parallel_size 2 \
   --vllm_gpu_memory_utilization 0.5 \
   --vllm_enable_sleep \
   --colocate_all_models \
-  --pretrain .temp/models/Qwen_Qwen2.5-14B-Instruct \
+  --pretrain .temp/models/Qwen_Qwen2.5-7B-Instruct \
   --remote_rm_url workspace/train/reward_func.py \
   --save_path ${OUTPUT_DIR} \
   --micro_train_batch_size 1 \
