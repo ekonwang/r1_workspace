@@ -7,7 +7,7 @@ QUESTION_TEMPLATE = "{Question}  Output the thinking process in <think> </think>
         "Here is the tikz code for the geometry problem:```\n{tikz}\n```"
 EDIT_TEMPLATE = "{Question}  Output the thinking process in <think> </think> and final answer (number) in <answer> </answer> tags.\n\n\n"\
         "Here is the tikz code for the geometry problem:```\n{tikz}\n```"\
-        "Optionally, consider to edit the tikz code to construct auxiliary lines, which should be marked with <auxiliary> </auxiliary> tags."
+        "Optionally, consider to edit the tikz code to construct auxiliary lines in the thinking process, which should be marked with <auxiliary> </auxiliary> tags."
 
 def format_data(data):
     tikz_code = data['tikz']
