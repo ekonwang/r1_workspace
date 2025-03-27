@@ -39,9 +39,9 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --remote_rm_url workspace/train/reward_func_relax.py \
   --save_path ${OUTPUT_DIR} \
   --micro_train_batch_size 1 \
-  --train_batch_size 16 \
+  --train_batch_size 64 \
   --micro_rollout_batch_size 1 \
-  --rollout_batch_size 16 \
+  --rollout_batch_size 128 \
   --temperature 1.0 \
   --n_samples_per_prompt 8 \
   --max_epochs 1 \

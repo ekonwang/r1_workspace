@@ -30,10 +30,10 @@ sleep 5
 
 python3 -m openrlhf.cli.train_ppo_ray \
   --actor_num_nodes 1 \
-  --actor_num_gpus_per_node 4 \
+  --actor_num_gpus_per_node 8 \
   --ref_num_nodes 1 \
-  --ref_num_gpus_per_node 4 \
-  --vllm_num_engines 2 \
+  --ref_num_gpus_per_node 8 \
+  --vllm_num_engines 4 \
   --vllm_tensor_parallel_size 2 \
   --vllm_gpu_memory_utilization 0.5 \
   --vllm_enable_sleep \
@@ -42,9 +42,9 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --remote_rm_url workspace/train/reward_func_aux.py \
   --save_path ${OUTPUT_DIR} \
   --micro_train_batch_size 1 \
-  --train_batch_size 16 \
+  --train_batch_size 64 \
   --micro_rollout_batch_size 2 \
-  --rollout_batch_size 32 \
+  --rollout_batch_size 128 \
   --temperature 1.0 \
   --n_samples_per_prompt 8 \
   --max_epochs 1 \
