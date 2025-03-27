@@ -29,8 +29,13 @@ def accuracy_reward_func(completion, answer):
             response = completion.split("\n")[-1]
 
     content, sol = response, answer
-    answer_parsed = content
     gold_parsed = parse(sol)
+
+    def parse_float(parsed):
+        # 用 re 提取所有 
+        pattern = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?'
+        return [float(p) for p in re.findall(pattern, parsed)]
+    
     if len(gold_parsed) != 0:
         answer_parsed = parse(
             content,
@@ -41,12 +46,17 @@ def accuracy_reward_func(completion, answer):
         except Exception:
             pass
 
-        try:
-            # relax the tolerance for geomverse
-            if abs(float(answer_parsed) - float(gold_parsed)) < 2e-2 * abs(float(gold_parsed)):
-                reward = 1.0
-        except Exception:
-            pass
+        if reward == 0.0:
+            # relaxed constraint
+            try:
+                answer_parsed_floats = parse_float(content)
+                gold_parsed_float = parse_float(sol)[-1]
+                for answer_parsed_float in answer_parsed_floats:
+                    if abs(answer_parsed_float - gold_parsed_float) < 2e-2 * abs(gold_parsed_float):
+                        reward = 1.0
+                        break
+            except Exception:
+                pass
 
         if reward == 0.0:
             try:
@@ -83,13 +93,17 @@ def reward_func(queries, prompts, labels):
     accuracy_rewards = []
     format_rewards = []
     repetition_penalties = []
-    pattern = r"<\|im_start\|>\s*assistant(.*?)<\|im_end\|>"
+    # pattern = r"<\|im_start\|>\s*assistant(.*?)<\|im_end\|>"
+    pattern = r"<|im_start|>assistant"
 
     with open(LOG_PATH, "a") as f:
         f.write(f"----------------------------- {current_time} -----------------------------\n")
         for query, prompt, label in zip(queries, prompts, labels):
             try:
-                response = re.search(pattern, query, re.DOTALL).group(1).strip()
+                # print(re.search(pattern, query, re.DOTALL))
+                # response = re.search(pattern, query, re.DOTALL).group(1).strip()
+
+                response = query.split(pattern, 1)[1]
                 answer = label
 
                 accuracy_reward = accuracy_reward_func(response, answer)
@@ -121,3 +135,61 @@ def reward_func(queries, prompts, labels):
     #     "repetition_penalties": torch.tensor(repetition_penalties, dtype=torch.float32),
     # }
     return torch.tensor(rewards, dtype=torch.float32)
+
+
+if __name__ == "__main__":
+    Q = r"""
+<|im_start|>assistant
+Let's analyze the given TikZ code. The rectangle is defined with vertices at points \(A (0, 0)\), \(B (10, 0)\), \(C (10, 24)\), and \(D (0, 24)\). The problem asks for the area of the yellow rectangle, which is the entire rectangle in this case since no part of the rectangle is filled in a different color or altered.
+
+The area \(A\) of a rectangle is given by the formula:
+
+\[ A = \text{length} \times \text{width} \]
+
+From the TikZ code:
+- The length of the rectangle is 10 (the horizontal distance between \(A\) and \(B\)).
+- The width of the rectangle is 24 (the vertical distance between \(A\) and \(D\)).
+
+Substituting these values into the area formula:
+
+\[ A = 10 \times 24 \]
+
+Calculating this product:
+
+\[ A = 240 \]
+
+Thus, the area of the yellow rectangle is 240 square units.
+
+<think> The given TikZ code provides the coordinates of the vertices of a rectangle, with the coordinates suggesting the length is 10 units and the width is 24 units. The area of the rectangle is the product of its length and width. </think>
+<answer>240.00</answer><|im_end|>
+Response: Let's analyze the given TikZ code. The rectangle is defined with vertices at points \(A (0, 0)\), \(B (10, 0)\), \(C (10, 24)\), and \(D (0, 24)\). The problem asks for the area of the yellow rectangle, which is the entire rectangle in this case since no part of the rectangle is filled in a different color or altered.
+
+The area \(A\) of a rectangle is given by the formula:
+
+\[ A = \text{length} \times \text{width} \]
+
+From the TikZ code:
+- The length of the rectangle is 10 (the horizontal distance between \(A\) and \(B\)).
+- The width of the rectangle is 24 (the vertical distance between \(A\) and \(D\)).
+
+Substituting these values into the area formula:
+
+\[ A = 10 \times 24 \]
+
+Calculating this product:
+
+\[ A = 240 \]
+
+Thus, the area of the yellow rectangle is 240 square units.
+
+<think> The given TikZ code provides the coordinates of the vertices of a rectangle, with the coordinates suggesting the length is 10 units and the width is 24 units. The area of the rectangle is the product of its length and width. </think>
+<answer>240.00</answer>
+"""
+    Q1 = r"""
+<|im_start|>assistant
+Hello, world! <answer>99.2</answer><\|im_end\|>
+"""
+    queries = [Q, Q1]
+    prompts = ["Hello, world!", "Hello, world!"]
+    labels = ["240", "99.9"]
+    print(reward_func(queries, prompts, labels))
