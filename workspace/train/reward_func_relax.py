@@ -46,17 +46,17 @@ def accuracy_reward_func(completion, answer):
         except Exception:
             pass
 
-        # if reward == 0.0:
-        #     # relaxed constraint
-        #     try:
-        #         answer_parsed_floats = parse_float(content)
-        #         gold_parsed_float = parse_float(sol)[-1]
-        #         for answer_parsed_float in answer_parsed_floats:
-        #             if abs(answer_parsed_float - gold_parsed_float) < 2e-2 * abs(gold_parsed_float):
-        #                 reward = 1.0
-        #                 break
-        #     except Exception:
-        #         pass
+        if reward == 0.0:
+            # relaxed constraint
+            try:
+                answer_parsed_floats = parse_float(content)
+                gold_parsed_float = parse_float(sol)[-1]
+                for answer_parsed_float in answer_parsed_floats:
+                    if abs(answer_parsed_float - gold_parsed_float) < 2e-2 * abs(gold_parsed_float):
+                        reward = 1.0
+                        break
+            except Exception:
+                pass
 
         if reward == 0.0:
             try:
