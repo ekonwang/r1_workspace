@@ -43,8 +43,8 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --save_path ${OUTPUT_DIR} \
   --micro_train_batch_size 1 \
   --train_batch_size 16 \
-  --micro_rollout_batch_size 1 \
-  --rollout_batch_size 16 \
+  --micro_rollout_batch_size 2 \
+  --rollout_batch_size 32 \
   --temperature 1.0 \
   --n_samples_per_prompt 8 \
   --max_epochs 1 \
@@ -71,7 +71,7 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --ckpt_path "${OUTPUT_DIR}/ckpt" \
   --max_ckpt_num 1000000 \
   --save_hf_ckpt \
-  --load_checkpoint | tee ${OUTPUT_DIR}/training.log
+  --load_checkpoint 2>&1 | tee ${OUTPUT_DIR}/training.log
 
 # --ref_reward_offload [Offload to CPU]
 # --remote_rm_url http://localhost:5000/get_reward

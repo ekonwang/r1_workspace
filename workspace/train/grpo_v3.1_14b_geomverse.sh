@@ -66,7 +66,7 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --ckpt_path "${OUTPUT_DIR}/ckpt" \
   --max_ckpt_num 1000000 \
   --save_hf_ckpt \
-  --load_checkpoint | tee ${OUTPUT_DIR}/training.log
+  --load_checkpoint 2>&1 | tee ${OUTPUT_DIR}/training.log
 
 # --ref_reward_offload [Offload to CPU]
 # --remote_rm_url http://localhost:5000/get_reward
