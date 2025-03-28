@@ -445,4 +445,6 @@ if __name__ == "__main__":
         f.write(f'{MODEL_PATH}\n')
         f.write(f'{result}\n')
 
+    del vlm_evaluator
     clean_up()
+    
