@@ -32,7 +32,6 @@ class VLMEval:
         gpu_memory_utilization: float = 0.9,
         max_model_len: int = 2048,
         dtype: str = "bfloat16",
-        device: str = "cuda:0",
         **kwargs
     ):
         """
@@ -55,7 +54,6 @@ class VLMEval:
             gpu_memory_utilization=gpu_memory_utilization,
             max_model_len=max_model_len,
             dtype=dtype,
-            device=device,
             **kwargs
         )
         
@@ -94,7 +92,7 @@ class VLMEval:
     
     def chat_vlm(
         self, 
-        messages: List[List[Dict], str],
+        messages: List[List[Dict]| str],
         sampling_params: Optional[SamplingParams] = None
     ) -> tuple:
         """
@@ -306,21 +304,13 @@ if __name__ == "__main__":
     # dataset = load_custom_dataset('.temp/datasets/GeomVerse/TEST/D1/data.jsonl', train_split_ratio=1, sample_size=120)
 
     DATASET_CONFIGS = {
-        "Geomverse-D2": {
-            "output_path": "GeomVerse/D2",
-            "load_path": ".temp/datasets/GeomVerse/TEST/D2/data.jsonl",
-        },
         "InterGPS-Geometry3K": {
             "output_path": "Geometry3K",
             "load_path": ".temp/datasets/intergpt_geometry3k",
         },
-        "MMLU": {
-            "output_path": "MMLU",
-            "load_path": "cais/mmlu",
-        }
     }
     data_config = DATASET_CONFIGS["InterGPS-Geometry3K"]
-    dataset = load_geometry3k_dataset(data_config['load_path'], sample_size=5000)['train']
+    dataset = load_geometry3k_dataset(data_config['load_path'], sample_size=6000)['train']
 
 
     vlm_evaluator = VLMEval(
@@ -330,6 +320,8 @@ if __name__ == "__main__":
     )
     induce_prompts = []
     eval_prompts = []
+    save_data = []
+    save_jsonl(eval_prompts, args.output_path)
     for idx in range(len(dataset)):
         example = dataset[idx]
         induce_prompts.append(make_induce_prompt(example)['prompt'])
@@ -338,11 +330,23 @@ if __name__ == "__main__":
     responses = vlm_evaluator.chat_vlm(induce_prompts)
     for i in tqdm(range(len(responses))):
         try:
-            think_process = re.search(r'<think>(.*?)</think>', responses[i], re.DOTALL).group(1).strip()
-            full_response = think_process + "\n\n" + dataset[i]['answer']
+            think_process = re.search(r'(<think>.*?</think>)', responses[i], re.DOTALL).group(1).strip()
+            full_response = think_process + "\n" + dataset[i]['answer']
             eval_prompts[i].append({"role": "assistant", "content": full_response})
+            save_data.append({
+                'prompt': eval_prompts[i][0]['content'],
+                'conversations': eval_prompts[i],
+                'answer': dataset[i]['answer'],
+                'original_problem': dataset[i]["problem"],
+                "diagram_logic_form": dataset[i]["diagram_logic_form"],
+                "line_instances": dataset[i]['line_instances'],
+                "dissolved_text_logic_form": dataset[i]['dissolved_text_logic_form'],
+            })
+
         except Exception as e:
-            print(f"Error on example {i}: {e}")
+            # print(f"Error on example {i}: {e}")
             continue
+    
+    save_jsonl(save_data, args.output_path)
 
     clean_up()

@@ -48,10 +48,17 @@ def format_data(data, edit=False):
         user_prompt = QUESTION_TEMPLATE.format(Question=question, tikz=tikz_code)
 
     answer = data['label']
+    cot = data['cot']
+    full_response = f'<think> {cot} </think>\n<answer> {answer} </answer>'
+
     conversations = [
         {
             'role': 'user',
             'content': user_prompt
+        },
+        {
+            'role': 'assistant',
+            'content': full_response,
         }
     ]
     return {
