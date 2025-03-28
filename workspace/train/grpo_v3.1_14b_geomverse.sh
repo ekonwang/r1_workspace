@@ -30,7 +30,7 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --ref_num_gpus_per_node 8 \
   --vllm_num_engines 4 \
   --vllm_tensor_parallel_size 2 \
-  --vllm_gpu_memory_utilization 0.5 \
+  --vllm_gpu_memory_utilization 0.7 \
   --vllm_enable_sleep \
   --colocate_all_models \
   --pretrain .temp/models/Qwen_Qwen2.5-14B-Instruct \

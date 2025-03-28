@@ -5,10 +5,12 @@ set -x
 # The auxiliary reward is 0.5 if the completion's thinking process contains auxiliary lines, otherwise 0.0.
 # The reward function portfolio is: accuracy, format, auxiliary.
 
+# v4.1: with relax reward
+
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace
 source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/bin/activate /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/envs/open-rlhf
 
-OUTPUT_DIR='./outputs/v4-grpo-7b'
+OUTPUT_DIR='./outputs/v4.1-grpo-7b'
 
 export RAY_MASTER_PORT=6379
 export REWARD_LOG_PATH="${OUTPUT_DIR}/reward.log"
@@ -39,7 +41,7 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --vllm_enable_sleep \
   --colocate_all_models \
   --pretrain .temp/models/Qwen_Qwen2.5-7B-Instruct \
-  --remote_rm_url workspace/train/reward_func_aux.py \
+  --remote_rm_url workspace/train/reward_func_aux_relax.py \
   --save_path ${OUTPUT_DIR} \
   --micro_train_batch_size 1 \
   --train_batch_size 32 \

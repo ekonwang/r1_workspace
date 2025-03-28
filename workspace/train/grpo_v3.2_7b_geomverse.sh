@@ -1,6 +1,6 @@
 set -x
 
-# v3.1 model with relaxed acc reward
+# v3.2: v3.1 model with relaxed acc reward
 
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace
 source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/bin/activate /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/envs/open-rlhf
@@ -32,18 +32,18 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --ref_num_gpus_per_node 4 \
   --vllm_num_engines 2 \
   --vllm_tensor_parallel_size 2 \
-  --vllm_gpu_memory_utilization 0.5 \
+  --vllm_gpu_memory_utilization 0.7 \
   --vllm_enable_sleep \
   --colocate_all_models \
   --pretrain .temp/models/Qwen_Qwen2.5-7B-Instruct \
   --remote_rm_url workspace/train/reward_func_relax.py \
   --save_path ${OUTPUT_DIR} \
   --micro_train_batch_size 1 \
-  --train_batch_size 64 \
-  --micro_rollout_batch_size 1 \
-  --rollout_batch_size 128 \
+  --train_batch_size 32 \
+  --micro_rollout_batch_size 2 \
+  --rollout_batch_size 64 \
   --temperature 1.0 \
-  --n_samples_per_prompt 8 \
+  --n_samples_per_prompt 6 \
   --max_epochs 1 \
   --max_samples 100000 \
   --num_episodes 1 \
