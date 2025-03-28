@@ -29,6 +29,10 @@ def accuracy_reward_func(completion, answer):
             response = completion.split("\n")[-1]
 
     content, sol = response, answer
+    try:
+        sol = re.search(r"<answer>(.*?)</answer>", sol).group(1).strip()
+    except:
+        sol = sol
     gold_parsed = parse(sol)
 
     def parse_float(parsed):
