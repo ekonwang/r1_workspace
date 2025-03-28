@@ -78,14 +78,14 @@ def accuracy_reward_func(completion, answer):
 def format_reward_func(completion, **kwargs):
     """Reward function that checks if the completion has a specific format."""
     pattern = r"<think>.*?</think>.*?<answer>.*?</answer>"
-    match = re.match(pattern, completion, re.DOTALL)
+    match = re.match(pattern, completion.strip(), re.DOTALL)
     return 0.5 if match else 0.0
 
 
 def aux_line_reward_func(completion, **kwargs):
     """Reward function that checks if the completion has a specific format."""
     pattern = r"<think>.*?<auxiliary>.*?</auxiliary>.*?</think>.*?<answer>.*?</answer>"
-    match = re.match(pattern, completion, re.DOTALL)
+    match = re.match(pattern, completion.strip(), re.DOTALL)
     return 0.5 if match else 0.0
 
 
@@ -145,46 +145,23 @@ def reward_func(queries, prompts, labels):
 
 if __name__ == "__main__":
     response = r"""
-To solve this problem, I need to first identify the type of triangle we are dealing with based on the lengths of the sides provided: J, K, and M. The given side lengths are 2.1, 1.3, and 1.9. Let's start with determining the lengths.
+<think>
+To solve for the measure of angle 3, let's first summing up the information received in the problem:
 
-1. **Check for right triangle using Pythagorean Theorem:**
-   - Hypotenuse ² = Leg₁² + Leg₂²
-   - 2.1² = 1.3² + 1.9²
-   - 4.41 = 1.69 + 3.61
-   - 4.41 ≠ 5.3
-   - Hence, it is not a right triangle.
+1. Measure of angle M is 31 degrees.
+2. Measure of angle 1 is the same as the measure of angle Q (given as 22 degrees).
+3. Measure of angle 2 is the same as the measure of angle L (which is also given as 31 degrees).
+4. Since line MN is perpendicular to both line LM and PQ, we know that each of the four angles formed by the intersection of the two lines (let’s call them angle 1, 2, 3, and 4) are right-angled and equal, each measuring 90 degrees.
 
-2. **Check for isosceles triangle using Pythagorean Postulate:**
-- If 2.1 is a base, then to see if it could be an isosceles triangle, we check if the other two sides are equal.
+However, angle 3 is also part of a larger context where angle 3 corresponds to the remaining angle when considering the sum of angles around a point or specific configurations provided in the problem. As MN and PQ are considered perpendicular and are made up of angle 1 (22 degrees) and angle 2 (31 degrees), angle 3 would be the supplementary angle to angle 1 when combined together.
 
-3. **Check lengths 1.3 and 1.9**
-   - They don't equal each other.
-   - Since 1.3² + 1.9² (5.3) ≠ 2.1² (4.41), this does not satisfy the Postulate of equal sides.
+The sum of angle 1 and 2 is: 22 + 31 = 53 degrees.
 
-Based on the property checks, it does not represent a standard right or isosceles triangle either. However, there is a different way to solve this using trigonometry.
+Since the total around a point would normally include 90 degrees for perpendicular lines, and considering angle 1 and 2 already consumed 53 degrees, the remaining complementary angle (to complete the perpendicular line measure) is: 90 - (90 - 53) = 90 - 53 = 37 degrees. But since angle 3 must align with these perpendicular properties, we now confirm if these complementary angles could shift by properties we saw:  
 
-4. **Using trigonometry (Sine Rule on Triangle JKM):**
-   - sin(x) = \(\frac{opposite}{hypotenuse}\)
-   - Let's determine the acute angle x at J with respect to side KM (hypotenuse).
-
-5. Use the Law of Cosines:
-   - Law of Cosines: \( a² = b² + c² - 2bc\cos(A) \)
-   - Let's apply it with sides k = 1.9, j = 1.3, and m = 2.1.
-   - \( 2.1² = 1.9² + 1.3² - 2 \cdot 1.9 \cdot 1.3 \cdot \cos(x) \)
-   - \( 4.41 = 3.61 + 1.69 - 4.34 \cdot \cos(x) \)
-   - \( 4.41 = 5.30 - 4.34 \cdot \cos(x) \)
-   - \( 4.41 - 5.30 = -4.34 \cdot \cos(x) \)
-   - \(-0.89 = -4.34 \cdot \cos(x) \)
-   - Dividing by -4.34, \(\cos(x) = \frac{0.89}{4.34} \approx 0.20\) 
-   - Hence, \( \cos^{-1}(0.20) \approx 79.3 \)
-
-Rounding 79.3 to the nearest degree gives us 79.
-
-Therefore, the correct answer is *not* in the given options.
-
-<think> Despite the attempt and the analysis, none of the provided options (43, 53, 63, 73) fit the calculated angle, which was approximately 79°. As the problem demands re-checking of logic and options provided. </think>
-
-<answer>69.8</answer><|im_end|>
+Since we are looking at the constructed lines and knowing perpendiculars, the 90 - remaining could apply to see the direct complementary angle to external line configurations. Given it must fit a summing up accurately m\angle 3 must fit best as 99.
+</think>
+<answer> C </answer>
 """
     answer = '<answer> 70 </answer>'
-    print(accuracy_reward_func(completion=response, answer=answer))
+    print(format_reward_func(completion=response))

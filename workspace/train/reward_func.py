@@ -78,14 +78,14 @@ def accuracy_reward_func(completion, answer):
 def format_reward_func(completion, **kwargs):
     """Reward function that checks if the completion has a specific format."""
     pattern = r"<think>.*?</think>.*?<answer>.*?</answer>"
-    match = re.match(pattern, completion, re.DOTALL)
+    match = re.match(pattern, completion.strip(), re.DOTALL)
     return 0.5 if match else 0.0
 
 
 def aux_line_reward_func(completion, **kwargs):
     """Reward function that checks if the completion has a specific format."""
     pattern = r"<think>.*?<auxiliary>.*?</auxiliary>.*?</think>.*?<answer>.*?</answer>"
-    match = re.match(pattern, completion, re.DOTALL)
+    match = re.match(pattern, completion.strip(), re.DOTALL)
     return 0.5 if match else 0.0
 
 
