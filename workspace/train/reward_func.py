@@ -120,7 +120,7 @@ def reward_func(queries, prompts, labels):
                 repetition_penalties.append(repetition_penalty)
 
                 f.write(f"===============================================================\n")
-                f.write("Query: " + query + "\n")
+                # f.write("Query: " + query + "\n")
                 f.write("Response: " + response + "\n")
                 f.write("Answer: " + answer + "\n")
                 f.write(f"Accuracy Reward: {accuracy_reward}\tFormat Reward: {format_reward}\n\n\n\n")
