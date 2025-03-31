@@ -21,8 +21,10 @@ def accuracy_reward_func(completion, answer):
     reward = 0.0
     response = extract_answer_with_tags(completion)
     if response == None:
-        print("Failed to extract answer from completion: ", completion.replace("\n", ""))
-        return 0.0
+        try:
+            response = completion.split("<answer>")[-1]
+        except:
+            response = completion.split("\n")[-1]
 
     content, sol = response, answer
     try:

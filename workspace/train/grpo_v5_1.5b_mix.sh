@@ -2,13 +2,11 @@ set -x
 
 # In this version (v5) training, we use mix dataset portforlio
 
-# v5.1: kl item deprived.
-
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace
 source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/bin/activate /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/envs/open-rlhf
 
-OUTPUT_DIR='./outputs/v5.1-mix-grpo-3b'
-MODEL=.temp/models/Qwen_Qwen2.5-3B-Instruct
+OUTPUT_DIR='./outputs/v5-mix-grpo-1.5b'
+MODEL=.temp/models/Qwen_Qwen2.5-1.5B-Instruct
 
 export RAY_MASTER_PORT=6379
 export REWARD_LOG_PATH="${OUTPUT_DIR}/reward.log"
@@ -26,24 +24,16 @@ sleep 1
 ray start --head  --port=$RAY_MASTER_PORT 
 sleep 5
 
-# --colocate_all_models \
-# OOM error: 
-# 1. colocate models
-# 2. reduce vllm memory utilization
-# 3. enable vllm sleep
-# 4. tensor parallel on all available gpus for ref & policy model (num nodes set 1)
-# 5. reduce micro [rollout] batch size
-
 python3 -m openrlhf.cli.train_ppo_ray \
   --actor_num_nodes 1 \
   --actor_num_gpus_per_node 4 \
   --ref_num_nodes 1 \
   --ref_num_gpus_per_node 4 \
-  --vllm_num_engines 1 \
-  --vllm_tensor_parallel_size 4 \
+  --vllm_num_engines 4 \
+  --vllm_tensor_parallel_size 1 \
   --vllm_gpu_memory_utilization 0.5 \
-  --vllm_enable_sleep \
   --colocate_all_models \
+  --vllm_enable_sleep \
   --pretrain $MODEL \
   --remote_rm_url workspace/train/reward_func_relax.py \
   --save_path ${OUTPUT_DIR} \
@@ -56,13 +46,13 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --max_epochs 1 \
   --max_samples 100000 \
   --num_episodes 1 \
-  --prompt_max_len 2048 \
-  --generate_max_len 4096 \
+  --prompt_max_len 1024 \
+  --generate_max_len 1024 \
   --zero_stage 3 \
   --bf16 \
   --actor_learning_rate 3e-7 \
   --advantage_estimator group_norm \
-  --init_kl_coef 0.0 \
+  --init_kl_coef 0.01 \
   --prompt_data .temp/datasets/0328_mix/data.jsonl \
   --input_key 'prompt' \
   --label_key 'answer' \

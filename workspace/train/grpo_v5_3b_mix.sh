@@ -24,8 +24,6 @@ sleep 1
 ray start --head  --port=$RAY_MASTER_PORT 
 sleep 5
 
-# --colocate_all_models \
-
 python3 -m openrlhf.cli.train_ppo_ray \
   --actor_num_nodes 1 \
   --actor_num_gpus_per_node 4 \
@@ -34,22 +32,22 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --vllm_num_engines 4 \
   --vllm_tensor_parallel_size 1 \
   --vllm_gpu_memory_utilization 0.5 \
-  --vllm_enable_sleep \
   --colocate_all_models \
+  --vllm_enable_sleep \
   --pretrain $MODEL \
   --remote_rm_url workspace/train/reward_func_relax.py \
   --save_path ${OUTPUT_DIR} \
   --micro_train_batch_size 1 \
   --train_batch_size 32 \
-  --micro_rollout_batch_size 16 \
+  --micro_rollout_batch_size 2 \
   --rollout_batch_size 64 \
   --temperature 1.0 \
   --n_samples_per_prompt 6 \
   --max_epochs 1 \
   --max_samples 100000 \
   --num_episodes 1 \
-  --prompt_max_len 2048 \
-  --generate_max_len 4096 \
+  --prompt_max_len 1024 \
+  --generate_max_len 1024 \
   --zero_stage 3 \
   --bf16 \
   --actor_learning_rate 3e-7 \
