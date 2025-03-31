@@ -91,7 +91,7 @@ class VLMEval:
     
     def chat_vlm(
         self, 
-        prompts: List[str],
+        messages: List[Dict],
         sampling_params: Optional[SamplingParams] = None
     ) -> tuple:
         """
@@ -107,20 +107,22 @@ class VLMEval:
         if sampling_params is None:
             sampling_params = self.default_sampling_params
         
-        if not isinstance(prompts, str):
-            prompts = [self._prepare_messages(prompt) for prompt in prompts]
-
+        # Process messages to handle images
+        processed_prompt = self._prepare_messages(messages)
+        
         # Generate response using vllm
         outputs = self.llm.generate(
-            prompts,
+            processed_prompt,
             sampling_params=sampling_params,
         )
         
         # Extract the generated text
-        # response_text = outputs[0].outputs[0].text
-        response_texts = [output.text for output in outputs]
+        response_text = outputs[0].outputs[0].text
         
-        return response_texts
+        # Update message history
+        full_message_history = messages + [{"role": "assistant", "content": response_text}]
+        
+        return response_text, full_message_history
 
 
 # Initialize the VLM evaluator
@@ -177,29 +179,26 @@ D. {example["choices"][3]}
         return reward
 
     example['prompt'] = make_conversation_image(example)['prompt']
-    example['solution'] = example['answer']
-
-    return example, cal_reward
 
     # BON evaluation
-    # bon_replies = []
-    # bon_reward = 0.0
-    # for i in range(3):
-    #     sampling_params = SamplingParams(
-    #         temperature=0.8,
-    #         top_p=1.0,
-    #         max_tokens=1024
-    #     )
-    #     reply, _ = vlm_evaluator.chat_vlm(example['prompt'], sampling_params)
-    #     bon_replies.append(reply)
-    #     bon_reward = cal_reward(reply, example['answer'])
-    #     if bon_reward == 1.0:
-    #         break
+    bon_replies = []
+    bon_reward = 0.0
+    for i in range(3):
+        sampling_params = SamplingParams(
+            temperature=0.8,
+            top_p=1.0,
+            max_tokens=1024
+        )
+        reply, _ = vlm_evaluator.chat_vlm(example['prompt'], sampling_params)
+        bon_replies.append(reply)
+        bon_reward = cal_reward(reply, example['answer'])
+        if bon_reward == 1.0:
+            break
 
-    # reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
-    # reward = cal_reward(reply, example['answer'])
+    reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
+    reward = cal_reward(reply, example['answer'])
 
-    # return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['answer']}
+    return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['answer']}
 
 
 def _eval_mmlu_(example: dict):
@@ -245,9 +244,26 @@ D. {example["choices"][3]}
     example['prompt'] = make_conversation_image(example)['prompt']
     answer_idx = int(example['answer'])
     solution = f"<answer> {['A', 'B', 'C', 'D'][answer_idx]} </answer>"
-    example['solution'] = solution
 
-    return example, cal_reward
+    # BON evaluation
+    bon_replies = []
+    bon_reward = 0.0
+    for i in range(3):
+        sampling_params = SamplingParams(
+            temperature=0.8,
+            top_p=1.0,
+            max_tokens=1024
+        )
+        reply, _ = vlm_evaluator.chat_vlm(example['prompt'], sampling_params)
+        bon_replies.append(reply)
+        bon_reward = cal_reward(reply, solution)
+        if bon_reward == 1.0:
+            break
+
+    reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
+    reward = cal_reward(reply, solution)
+
+    return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': solution}
 
 
 def _eval_geomverse_(example: dict):
@@ -296,100 +312,67 @@ def _eval_geomverse_(example: dict):
         return reward
 
     example['prompt'] = make_conversation_image(example)['prompt']
-    return example, cal_reward
 
-    # # BON evaluation
-    # bon_replies = []
-    # bon_reward = 0.0
-    # for i in range(3):
-    #     sampling_params = SamplingParams(
-    #         temperature=0.8,
-    #         top_p=1.0,
-    #         max_tokens=1024
-    #     )
-    #     reply, _ = vlm_evaluator.chat_vlm(example['prompt'], sampling_params)
-    #     bon_replies.append(reply)
-    #     bon_reward = cal_reward(reply, example['solution'])
-    #     if bon_reward == 1.0:
-    #         break
+    # BON evaluation
+    bon_replies = []
+    bon_reward = 0.0
+    for i in range(3):
+        sampling_params = SamplingParams(
+            temperature=0.8,
+            top_p=1.0,
+            max_tokens=1024
+        )
+        reply, _ = vlm_evaluator.chat_vlm(example['prompt'], sampling_params)
+        bon_replies.append(reply)
+        bon_reward = cal_reward(reply, example['solution'])
+        if bon_reward == 1.0:
+            break
 
-    # reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
-    # reward = cal_reward(reply, example['solution'])
+    reply, _ = vlm_evaluator.chat_vlm(example['prompt'])
+    reward = cal_reward(reply, example['solution'])
 
-    # return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['solution']}
+    return {'prompt': example["prompt"], "bon_replies": bon_replies, "bon_reward": int(bon_reward), "reward": int(reward), 'reply': reply, 'solution': example['solution']}
 
 
-def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callable = _eval_geomverse_, bon_num: int = 3):
+def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callable = _eval_geomverse_):
     tot_acc = {'bon': 0, 'reward': 0}
-    tot_eval = len(dataset)
+    tot_eval = 0
     all_eval_data = []
 
-    bon_prompts = []
-    prompts = []
-    processed_examples = []
-    for element in dataset:
-        example, cal_reward = eval_func(element)
-        processed_examples.append(example)
-        prompts.append(example['prompt'])
-        for i in range(bon_num):
-            bon_prompts.append(example['prompt'])
-    
-    bon_sampling_params = SamplingParams(
-        temperature=0.8,
-        top_p=1.0,
-        max_tokens=1024
-    )
-    
-    assert len(bon_prompts) == len(dataset) * bon_num
-    bon_replies = vlm_evaluator.chat_vlm(bon_prompts, bon_sampling_params)
-    replies = vlm_evaluator.chat_vlm(prompts)
-    for i in range(len(dataset)):
-        for j in range(bon_num):
-            if cal_reward(bon_replies[i * bon_num + j], processed_examples[i]['solution']) == 1.0:
-                tot_acc['bon'] += 1
-        if cal_reward(replies[i], processed_examples[i]['solution']) == 1.0:
-            tot_acc['reward'] += 1
-        
-        all_eval_data.append({
-            **processed_examples[i],
-            "bon_replies": bon_replies[i * bon_num: (i + 1) * bon_num],
-            "reply": replies[i],
-        })
-
     # pbar = mk_len_pbar(len(dataset), desc='Evaluating')
-    # with Progress() as progress:
-    #     task_id = progress.add_task("[red]Processing...", total=len(dataset))
+    with Progress() as progress:
+        task_id = progress.add_task("[red]Processing...", total=len(dataset))
 
-        # for element_id in range(len(dataset)):
-        #     element = dataset[element_id]
+        for element_id in range(len(dataset)):
+            element = dataset[element_id]
 
-        #     try:
-        #         eval_dict = eval_func(element)
-        #     except Exception as err:
-        #         raise err
-        #         if 'keyboard' in str(err).lower():
-        #             raise err
-        #         print_error(err)
-        #     else:
-        #         tot_acc['bon'] += eval_dict['bon_reward']
-        #         tot_acc['reward'] += eval_dict['reward']
-        #         tot_eval += 1
-        #         if verbose:
-        #             print(f"\n" * 3)
-        #             print("=" * 40)
-        #             print(f"Question: {eval_dict['prompt']}")
-        #             print(">" * 20)
-        #             print(f"Answer: {eval_dict['reply']}")
-        #             print(">" * 20)
-        #             print(f"Ground Truth: {eval_dict['solution']}")
+            try:
+                eval_dict = eval_func(element)
+            except Exception as err:
+                raise err
+                if 'keyboard' in str(err).lower():
+                    raise err
+                print_error(err)
+            else:
+                tot_acc['bon'] += eval_dict['bon_reward']
+                tot_acc['reward'] += eval_dict['reward']
+                tot_eval += 1
+                if verbose:
+                    print(f"\n" * 3)
+                    print("=" * 40)
+                    print(f"Question: {eval_dict['prompt']}")
+                    print(">" * 20)
+                    print(f"Answer: {eval_dict['reply']}")
+                    print(">" * 20)
+                    print(f"Ground Truth: {eval_dict['solution']}")
                 
-        #         all_eval_data.append(eval_dict)
-        #         save_jsonl(all_eval_data, output_path, use_tqdm=False)
+                all_eval_data.append(eval_dict)
+                save_jsonl(all_eval_data, output_path, use_tqdm=False)
             
-        #     progress.update(task_id, advance=1)
-        #     progress.update(task_id, description=f'Evaluating: BoN@3 {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | Pass@1 {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})')
+            progress.update(task_id, advance=1)
+            progress.update(task_id, description=f'Evaluating: BoN@3 {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | Pass@1 {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})')
 
-    return f'Evaluating: BoN@3 {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | Pass@1 {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})'
+        return f'Evaluating: BoN@3 {tot_acc["bon"] / tot_eval * 100:.2f} ({tot_acc["bon"]:d}/{tot_eval:d}) | Pass@1 {tot_acc["reward"] / tot_eval * 100:.2f} ({tot_acc["reward"]:d}/{tot_eval:d})'
 
 
 def parse_args():
