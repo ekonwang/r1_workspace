@@ -182,6 +182,17 @@ def load_mmlu_dataset(file_path='cais/mmlu', sample_size=None):
     }
 
 
+def load_aime_dataset(load_path, sample_size=None):
+    train_dataset = load_dataset(load_path, split='train', trust_remote_code=True)
+    if sample_size is not None:
+        # random sample
+        train_dataset = train_dataset.shuffle(seed=7).select(range(sample_size))
+    return {
+        'train': train_dataset,
+        'test': None,
+    }
+
+
 if __name__ == "__main__":
     # test _mask_coordinates
     tikz_input = r"""

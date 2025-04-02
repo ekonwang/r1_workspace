@@ -43,13 +43,11 @@ def snap_download_dataset(dataset_name):
 # snap_download_model("Qwen/Qwen2.5-32B-Instruct")
 # snap_download_model("Qwen/Qwen2.5-72B-Instruct")
 # snap_download_model("OpenRLHF/Llama-3-8b-sft-mixture")
-snap_download_model("Qwen/Qwen2.5-1.5B-Instruct")
-
-# snap_download_dataset("FanqingM/MM-Eureka-Dataset")
+# snap_download_model("Qwen/Qwen2.5-1.5B-Instruct")
 # snap_download_model("OpenGVLab/InternVL2_5-8B")
 # snap_download_model("OpenRLHF/Llama-3-8b-rm-700k")
 
-# snapshot_download(repo_id="Jiayi-Pan/Countdown-Tasks-3to4", repo_type="dataset", local_dir="./.temp/datasets/Countdown-Tasks-3to4")
-# snapshot_download(repo_id="leonardPKU/clevr_cogen_a_train", repo_type="dataset", local_dir="./.temp/datasets/clevr_cogen_a_train")
+# snap_download_dataset("FanqingM/MM-Eureka-Dataset")
 # snap_download_dataset("hiyouga/geometry3k")
 # snap_download_dataset("OpenRLHF/preference_dataset_mixture2_and_safe_pku")
+snap_download_dataset("di-zhang-fdu/AIME_1983_2024")
