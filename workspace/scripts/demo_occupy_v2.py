@@ -88,12 +88,13 @@ if __name__ == "__main__":
         try:
             if args.threshold > 0:
                 while(check_gpu_memory_already_occupied(args.threshold)):
-                    time.sleep(DAEMON_INTERVAL)
+                    time.sleep(1)
                 
                 __daemon_might_start = time.time()
                 __daemon_requirements_fulfilled = False
                 while not check_gpu_memory_already_occupied(args.threshold):
                     eclipsed = time.time() - __daemon_might_start
+                    time.sleep(1)
                     if eclipsed >= DAEMON_INTERVAL:
                         __daemon_requirements_fulfilled = True
                         print_error('Daemon Start Rule Activated.')
