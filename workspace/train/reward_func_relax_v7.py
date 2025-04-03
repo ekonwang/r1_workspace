@@ -1,10 +1,13 @@
 import os
+import sys
 import re
 from datetime import datetime
 
 import torch
+import tiktoken
 from math_verify import ExprExtractionConfig, LatexExtractionConfig, StringExtractionConfig, parse, verify
 
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from reward_utils import accuracy_reward_func, format_reward_func, aux_line_reward_func, length_reward_func
 
 LOG_PATH = os.environ.get("REWARD_LOG_PATH", "reward.log")
@@ -65,58 +68,6 @@ def reward_func(queries, prompts, labels):
 
 
 if __name__ == "__main__":
-    Q = r"""
-<|im_start|>assistant
-Let's analyze the given TikZ code. The rectangle is defined with vertices at points \(A (0, 0)\), \(B (10, 0)\), \(C (10, 24)\), and \(D (0, 24)\). The problem asks for the area of the yellow rectangle, which is the entire rectangle in this case since no part of the rectangle is filled in a different color or altered.
-
-The area \(A\) of a rectangle is given by the formula:
-
-\[ A = \text{length} \times \text{width} \]
-
-From the TikZ code:
-- The length of the rectangle is 10 (the horizontal distance between \(A\) and \(B\)).
-- The width of the rectangle is 24 (the vertical distance between \(A\) and \(D\)).
-
-Substituting these values into the area formula:
-
-\[ A = 10 \times 24 \]
-
-Calculating this product:
-
-\[ A = 240 \]
-
-Thus, the area of the yellow rectangle is 240 square units.
-
-<think> The given TikZ code provides the coordinates of the vertices of a rectangle, with the coordinates suggesting the length is 10 units and the width is 24 units. The area of the rectangle is the product of its length and width. </think>
-<answer>240.00</answer><|im_end|>
-Response: Let's analyze the given TikZ code. The rectangle is defined with vertices at points \(A (0, 0)\), \(B (10, 0)\), \(C (10, 24)\), and \(D (0, 24)\). The problem asks for the area of the yellow rectangle, which is the entire rectangle in this case since no part of the rectangle is filled in a different color or altered.
-
-The area \(A\) of a rectangle is given by the formula:
-
-\[ A = \text{length} \times \text{width} \]
-
-From the TikZ code:
-- The length of the rectangle is 10 (the horizontal distance between \(A\) and \(B\)).
-- The width of the rectangle is 24 (the vertical distance between \(A\) and \(D\)).
-
-Substituting these values into the area formula:
-
-\[ A = 10 \times 24 \]
-
-Calculating this product:
-
-\[ A = 240 \]
-
-Thus, the area of the yellow rectangle is 240 square units.
-
-<think> The given TikZ code provides the coordinates of the vertices of a rectangle, with the coordinates suggesting the length is 10 units and the width is 24 units. The area of the rectangle is the product of its length and width. </think>
-<answer>240.00</answer>
-"""
-    Q1 = r"""
-<|im_start|>assistant
-Hello, world! <answer>99.2</answer><\|im_end\|>
-"""
-    queries = [Q, Q1]
-    prompts = ["Hello, world!", "Hello, world!"]
-    labels = ["240", "99.9"]
-    print(reward_func(queries, prompts, labels))
+    test_completion = "Hello, world!"
+    print(length_reward_func(test_completion))
+    # print(len(tiktoken.encoding_for_model("gpt-4o").encode(test_completion)))

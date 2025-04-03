@@ -4,7 +4,14 @@ from datetime import datetime
 
 import torch
 from math_verify import ExprExtractionConfig, LatexExtractionConfig, StringExtractionConfig, parse, verify
-import tiktoken
+from transformers import AutoTokenizer
+
+__workspace_path = os.path.dirname(os.path.abspath(__file__)) + '/..'
+__text_tokenizer = AutoTokenizer.from_pretrained(__workspace_path + "/tokenizer")
+
+def __get_tokens(text):
+    return __text_tokenizer.encode(text)
+
 
 def extract_answer_with_tags(text):
     match = re.search(r"<answer>(.*?)</answer>", text, re.DOTALL)
@@ -89,10 +96,11 @@ def aux_line_reward_func(completion, **kwargs):
 
 def length_reward_func(completion: str, max_length=900, beta:float=0.5, **kwargs):
     """Reward function that checks if the completion has a specific format."""
-    tokenized_length = len(tiktoken.encoding_for_model("gpt-4o").encode(completion))
+    tokenized_length = len(__get_tokens(completion))
     return (min(tokenized_length, max_length) / max_length) * beta
 
 
 if __name__ == "__main__":
     test_completion = "Hello, world!"
-    print(len(tiktoken.encoding_for_model("gpt-4o").encode(test_completion)))
+    # print(len(tiktoken.encoding_for_model("gpt-4o").encode(test_completion)))
+    print(length_reward_func(test_completion))

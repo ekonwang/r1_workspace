@@ -1,0 +1,112 @@
+import torch 
+import time
+import os
+import argparse
+import shutil
+import sys
+import numpy as np
+import subprocess
+from datetime import datetime
+
+def print_error(message):
+    message = f'[{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}] {message}'
+    print(f"\033[91m\033[1m{message}\033[0m")
+
+GLOBAL_DAEMON=0
+DAEMON_INTERVAL=30
+
+
+def check_gpu_memory_already_occupied(threshold=32):
+    assert threshold > 0
+
+    try:
+        # 使用nvidia-smi命令获取显存使用情况
+        result = subprocess.run(
+            ['nvidia-smi', '--query-gpu=memory.used', '--format=csv,nounits,noheader'],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        # 获取显存使用量（单位为MiB）
+        memory_array = result.stdout.strip().split('\n')
+        memory_usage = float(np.mean(np.array([int(r) for r in memory_array])))
+        # 判断是否超过32MB
+        if memory_usage > threshold:
+            print_error(f"暂缓进入 【OCCUPY】 模式，当前 {len(memory_array)}卡平均显存使用量: {memory_usage / 1024:.4f}GB.")
+            return True 
+        else:
+            print_error(f"Idle GPU resources. 当前 {len(memory_array)}卡平均显存使用量: {memory_usage / 1024:.4f}GB.")
+            return False
+
+    except subprocess.CalledProcessError:
+        # 如果nvidia-smi命令执行失败，返回False
+        print_error("无法获取显存使用情况。")
+        return True
+
+ 
+def parse_args():
+    parser = argparse.ArgumentParser(description='Matrix multiplication')
+    parser.add_argument('--gpus', help='gpu amount', required=True, type=int)
+    parser.add_argument('--size', help='matrix size', default=70000, type=int)
+    parser.add_argument('--interval', help='sleep interval', default=0.0001, type=float)
+    parser.add_argument('--threshold', type=int, help='memory threshold for occupying', default=0)
+    parser.add_argument('--daemon_interval', type=float, default=60)
+    args = parser.parse_args()
+    return args
+
+ 
+def matrix_multiplication(args):
+    global GLOBAL_DAEMON
+    GLOBAL_DAEMON=0
+
+    print_error(f"进入【OCCUPY】 模式")
+    while True:
+        a_list, b_list, result = [], [], []    
+        size = (args.size, args.size)
+
+        for i in range(args.gpus):
+            a_list.append(torch.rand(size, device=i))
+            b_list.append(torch.rand(size, device=i))
+            result.append(torch.rand(size, device=i))
+
+        for i in range(args.gpus):
+            result[i] = a_list[i] * b_list[i]
+        time.sleep(args.interval)
+ 
+
+def __daemon_task_start(args):
+    return matrix_multiplication(args)
+
+ 
+if __name__ == "__main__":
+    # usage: python workspace/scripts/demo_occupy_v2.py --size 55000 --gpus 4 --interval 0.03 --threshold 24 --daemon_interval 360
+    # usage: python workspace/scripts/demo_occupy_v2.py --size 55000 --gpus 4 --interval 0.05 --threshold 24000 --daemon_interval 0.1 
+    args = parse_args()
+    DAEMON_INTERVAL = args.daemon_interval
+
+    while True:
+        try:
+            if args.threshold > 0:
+                while(check_gpu_memory_already_occupied(args.threshold)):
+                    time.sleep(DAEMON_INTERVAL)
+                
+                __daemon_might_start = time.time()
+                __daemon_requirements_fulfilled = False
+                while not check_gpu_memory_already_occupied(args.threshold):
+                    eclipsed = time.time() - __daemon_might_start
+                    if eclipsed >= DAEMON_INTERVAL:
+                        __daemon_requirements_fulfilled = True
+                        print_error('Daemon Start Rule Activated.')
+                        break
+                
+                if __daemon_requirements_fulfilled:
+                    __daemon_task_start(args)
+            else:
+                __daemon_task_start(args)
+        except Exception as err:
+            print_error(err)
+            raise err
+            # Stay in loop until interrupt from the user...
+            if 'keyboard' in str(err).lower():
+                break
+            time.sleep(DAEMON_INTERVAL)

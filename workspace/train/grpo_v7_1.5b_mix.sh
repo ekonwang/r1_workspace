@@ -7,7 +7,7 @@ source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangy
 
 OUTPUT_DIR='./outputs/v7-mix-grpo-1.5b'
 MODEL=.temp/models/Qwen_Qwen2.5-1.5B-Instruct
-REWARD=workspace/train/reward_func_aux_relax_v7.py
+REWARD=workspace/train/reward_func_relax_v7.py
 PROMPT=.temp/datasets/0328_mix/data.jsonl
 
 export RAY_MASTER_PORT=6379
