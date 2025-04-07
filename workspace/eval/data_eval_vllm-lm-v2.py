@@ -420,7 +420,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, required=True, default='.temp/models/Qwen_Qwen2.5-3B-Instruct')
-    parser.add_argument("--output_path", type=str, default='.temp/outputs')
+    parser.add_argument("--output_path", type=str, default='.temp/outputs_v2')
     parser.add_argument("--dataset_path", type=str, default='Geomverse-D2')
     parser.add_argument("--verbose", action='store_true', help='output verbose info for debug.')
     return parser.parse_args()

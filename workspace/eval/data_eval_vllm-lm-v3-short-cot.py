@@ -135,7 +135,7 @@ def _generate_model_name(model_name: str):
 
 
 def _eval_geometry3k_(example: dict):
-    QUESTION_TEMPLATE = "{problem}  Output dozens of tokens of thinking process and final answer (the option letter) in <answer> </answer> tags.\n\n\n"\
+    QUESTION_TEMPLATE = "{problem}  Output dozens of tokens of thinking process in <think> </think> and final answer (the option letter) in <answer> </answer> tags.\n\n\n"\
         "Here is the logic form for the geometry problem:```\n{logic_form}\n```"
 
     def make_conversation_image(example):
@@ -185,7 +185,7 @@ D. {example["choices"][3]}
 
 
 def _eval_mmlu_(example: dict):
-    QUESTION_TEMPLATE = "{problem}  Output dozens of tokens of thinking process and final answer (the option letter) in <answer> </answer> tags."
+    QUESTION_TEMPLATE = "{problem}  Output dozens of tokens of thinking process in <think> </think> and final answer (the option letter) in <answer> </answer> tags."
 
     def make_conversation_image(example):
         problem = f"""
@@ -233,7 +233,7 @@ D. {example["choices"][3]}
 
 
 def _eval_geomverse_(example: dict):
-    QUESTION_TEMPLATE = "{Question}  Output dozens of tokens of thinking process and final answer (number) in <answer> </answer> tags.\n\n\n"\
+    QUESTION_TEMPLATE = "{Question}  Output dozens of tokens of thinking process in <think> </think> and final answer (number) in <answer> </answer> tags.\n\n\n"\
         "Here is the tikz code for the geometry problem:```\n{tikz}\n```"
 
     def make_conversation_image(example):
@@ -250,7 +250,7 @@ def _eval_geomverse_(example: dict):
         reward = 0.0
         # Try symbolic verification first
         try:
-            answer = parse(content)
+            answer = parse(content[-50:])
             if float(verify(answer, parse(sol))) > 0:
                 reward = 1.0
         except Exception:
@@ -286,7 +286,7 @@ def _eval_aime_(example: dict):
     1. prompt
     2. solution
     """
-    QUESTION_TEMPLATE = "{Question}  Output dozens of tokens of thinking process and final answer (number) in <answer> </answer> tags."
+    QUESTION_TEMPLATE = "{Question}  Output dozens of tokens of thinking process in <think> </think> and final answer (number) in <answer> </answer> tags."
 
     def make_conversation_image(example):
         return {
@@ -302,7 +302,7 @@ def _eval_aime_(example: dict):
         reward = 0.0
         # Try symbolic verification first
         try:
-            answer = parse(content)
+            answer = parse(content[-50:])
             if float(verify(answer, parse(sol))) > 0:
                 reward = 1.0
         except Exception:
@@ -382,7 +382,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, required=True, default='.temp/models/Qwen_Qwen2.5-3B-Instruct')
-    parser.add_argument("--output_path", type=str, default='.temp/outputs')
+    parser.add_argument("--output_path", type=str, default='.temp/outputs_scot')
     parser.add_argument("--dataset_path", type=str, default='Geomverse-D2')
     parser.add_argument("--verbose", action='store_true', help='output verbose info for debug.')
     return parser.parse_args()
