@@ -28,9 +28,9 @@
 [submodule "DeepSpeed"]
 	path = DeepSpeed
 	url = https://github.com/deepspeedai/DeepSpeed.git
-[submodule "OpenRLHF"]
-	path = OpenRLHF
-	url = git@github.com:OpenRLHF/OpenRLHF.git
 [submodule "MM-EUREKA"]
 	path = MM-EUREKA
 	url = git@github.com:ModalMinds/MM-EUREKA.git
+[submodule "r1_workspace_openrlhf"]
+	path = r1_workspace_openrlhf
+	url = https://github.com/ekonwang/r1_workspace_openrlhf.git
