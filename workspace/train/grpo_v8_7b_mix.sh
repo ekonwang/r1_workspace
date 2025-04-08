@@ -6,21 +6,29 @@ set -x
 
 # v7: longer length rewrad
 # v7.3: v7 + more samples per prompt
+# v8: v5.1 + group contrastive GRPO
 
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace
 source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/bin/activate /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/envs/open-rlhf
 
 OUTPUT_DIR='./outputs/v8-mix-grpo-7b'
 MODEL=.temp/models/Qwen_Qwen2.5-7B-Instruct
-REWARD=workspace/train/reward_func_relax_v7.py
+REWARD=workspace/train/reward_func_relax_v8.py
 PROMPT=.temp/datasets/0328_mix/data.jsonl
 
 export RAY_MASTER_PORT=6379
-export REWARD_LOG_PATH="${OUTPUT_DIR}/reward.log"
 export WORKING_DIR=$PWD
-export PYTHONPATH=./workspace/reward:$PYTHONPATH
 
+# For GRPO reward module
+export PYTHONPATH=./workspace/reward:$PYTHONPATH
+export REWARD_LOG_PATH="${OUTPUT_DIR}/reward.log"
 echo '' > ${REWARD_LOG_PATH}
+
+# For GC reward module
+export GROUP_CONSTRASTIVE_MODE=1
+export GC_LOG_PATH="${OUTPUT_DIR}/gc_reward_log.log"
+export GROUP_CONSTRASTIVE_EPSILON=0.05
+echo '' > ${GC_LOG_PATH}
 
 if [ ! -d "$OUTPUT_DIR" ]; then
   mkdir -p "$OUTPUT_DIR"
@@ -76,6 +84,8 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --max_ckpt_num 1000000 \
   --save_hf_ckpt \
   --load_checkpoint 2>&1 | tee ${OUTPUT_DIR}/training.log
+
+# --use_kl_loss --kl_estimator k3
 
 # --ref_reward_offload [Offload to CPU]
 # --remote_rm_url http://localhost:5000/get_reward
