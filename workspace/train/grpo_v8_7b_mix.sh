@@ -5,11 +5,12 @@ set -x
 # compare with last version, we use kl=0 and aux reward.
 
 # v7: longer length rewrad
+# v7.3: v7 + more samples per prompt
 
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace
 source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/bin/activate /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/envs/open-rlhf
 
-OUTPUT_DIR='./outputs/v7-mix-grpo-7b'
+OUTPUT_DIR='./outputs/v8-mix-grpo-7b'
 MODEL=.temp/models/Qwen_Qwen2.5-7B-Instruct
 REWARD=workspace/train/reward_func_relax_v7.py
 PROMPT=.temp/datasets/0328_mix/data.jsonl
@@ -17,6 +18,7 @@ PROMPT=.temp/datasets/0328_mix/data.jsonl
 export RAY_MASTER_PORT=6379
 export REWARD_LOG_PATH="${OUTPUT_DIR}/reward.log"
 export WORKING_DIR=$PWD
+export PYTHONPATH=./workspace/reward:$PYTHONPATH
 
 echo '' > ${REWARD_LOG_PATH}
 
@@ -48,7 +50,7 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --micro_rollout_batch_size 2 \
   --rollout_batch_size 64 \
   --temperature 1.0 \
-  --n_samples_per_prompt 6 \
+  --n_samples_per_prompt 16 \
   --max_epochs 1 \
   --max_samples 100000 \
   --num_episodes 1 \
