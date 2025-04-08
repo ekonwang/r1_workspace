@@ -94,6 +94,14 @@ def aux_line_reward_func(completion, **kwargs):
     return 0.5 if match else 0.0
 
 
+def aux_line_reward_v2_func(completion, **kwargs):
+    """Reward function that checks if the completion has a specific format."""
+    pattern = r"<auxiliary>.*?</auxiliary>"
+    match = re.findall(pattern, completion.strip(), re.DOTALL)
+    # if match is not empty, return 1.0, otherwise return 0.0
+    return 0.5 if match else 0.0
+
+
 def length_reward_func(completion: str, max_length=900, beta:float=0.5, **kwargs):
     """Reward function that checks if the completion has a specific format."""
     tokenized_length = len(__get_tokens(completion))
