@@ -11,8 +11,8 @@ set -x
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace
 source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/bin/activate /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/envs/open-rlhf
 
-OUTPUT_DIR='./outputs/v8-mix-grpo-1.5b'
-MODEL=.temp/models/Qwen_Qwen2.5-1.5B-Instruct
+OUTPUT_DIR='./outputs/v8-mix-grpo-3b'
+MODEL=.temp/models/Qwen_Qwen2.5-3B-Instruct
 REWARD=workspace/reward/reward_func_relax_v8.py
 PROMPT=.temp/datasets/0328_mix/data.jsonl
 
@@ -58,11 +58,11 @@ python3 -m openrlhf.cli.train_ppo_ray \
   --micro_rollout_batch_size 2 \
   --rollout_batch_size 64 \
   --temperature 1.0 \
-  --n_samples_per_prompt 16 \
+  --n_samples_per_prompt 8 \
   --max_epochs 1 \
   --max_samples 100000 \
   --num_episodes 1 \
-  --prompt_max_len 1024 \
+  --prompt_max_len 2048 \
   --generate_max_len 1024 \
   --zero_stage 3 \
   --bf16 \

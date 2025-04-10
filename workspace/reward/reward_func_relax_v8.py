@@ -21,14 +21,22 @@ def reward_func(queries, prompts, labels):
     rewards = []
     accuracy_rewards = []
     format_rewards = []
+    length_rewards = []
     aux_rewards = []
     repetition_penalties = []
     # pattern = r"<\|im_start\|>\s*assistant(.*?)<\|im_end\|>"
     pattern = r"<|im_start|>assistant"
 
+    assert len(queries) == 2
+
     with open(LOG_PATH, "a") as f:
         f.write(f"----------------------------- {current_time} -----------------------------\n")
         for query, prompt, label in zip(queries, prompts, labels):
+            accuracy_reward = 0.0
+            format_reward = 0.0
+            length_reward = 0.0
+            aux_line_reward = 0.0
+            repetition_penalty = 0.0
             try:
                 # print(re.search(pattern, query, re.DOTALL))
                 # response = re.search(pattern, query, re.DOTALL).group(1).strip()
@@ -40,13 +48,6 @@ def reward_func(queries, prompts, labels):
                 format_reward = format_reward_func(response)
                 length_reward = length_reward_func(response, max_length=900, beta=1.0)
                 aux_line_reward = aux_line_reward_v2_func(response)
-                repetition_penalty = 0.0
-
-                rewards.append(accuracy_reward + format_reward + length_reward)
-                accuracy_rewards.append(accuracy_reward)
-                format_rewards.append(format_reward)
-                aux_rewards.append(aux_line_reward)
-                repetition_penalties.append(repetition_penalty)
 
                 f.write(f"===============================================================\n")
                 # f.write("Query: " + query + "\n")
@@ -54,12 +55,20 @@ def reward_func(queries, prompts, labels):
                 f.write("[Answer]: \n\n" + answer + "\n\n")
                 f.write(f"Accuracy Reward: {accuracy_reward}\tFormat Reward: {format_reward}\tAuxiliary Reward: {aux_line_reward}\n\n\n\n")
                 f.write(f"===============================================================\n")
-            except:
-                f.write("Error: " + query + "\n")
-                rewards.append(0.0)
-                accuracy_rewards.append(0.0)
-                format_rewards.append(0.0)
-                repetition_penalties.append(0.0)
+
+            except Exception as err:
+                f.write(f"[Reward Error]: {err}")
+                f.write(f"[Reward Error]: " + query + "\n")
+                f.write("=" * 100)
+
+            rewards.append(0.0)
+            accuracy_rewards.append(accuracy_reward)
+            format_rewards.append(format_reward)
+            aux_rewards.append(aux_line_reward)
+            length_rewards.append(length_reward)
+            repetition_penalties.append(repetition_penalty)
+
+
 
     # return {
     #     "rewards": torch.tensor(rewards, dtype=torch.float32),
