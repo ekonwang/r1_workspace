@@ -3,3 +3,7 @@ math_verify
 wandb
 ipdb
 # apt-get upgrade && apt-get update && apt-get install ffmpeg libsm6 libxext6 -y
+autogen==0.7.6
+pyautogen==0.7.6
+pydantic==2.10.6
+pydantic_core==2.27.2

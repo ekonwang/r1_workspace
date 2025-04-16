@@ -6,3 +6,4 @@
 *.log
 *.txt
 .DS_Store
+config.py
