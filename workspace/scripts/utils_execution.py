@@ -115,7 +115,8 @@ class CodeExecutor:
         init_code = ("import sys\n"
                      "from PIL import Image\n"
                      "from IPython.display import display\n"
-                    #  "from utils_geometry import *\n"
+                     f"sys.path.append('{parent_dir}')\n"
+                     "from utils_geometry import *\n"
         )
 
         init_resp = self.execute(init_code)

@@ -46,7 +46,7 @@ def reward_func(queries, prompts, labels):
 
                 accuracy_reward = accuracy_reward_func(response, answer, relaxed=True)
                 format_reward = format_reward_func(response)
-                length_reward = length_reward_func(response, max_length=900, beta=1.0)
+                length_reward = length_reward_func(response, max_length=900, beta=0.5)
                 aux_line_reward = aux_line_reward_v2_func(response)
 
                 f.write(f"===============================================================\n")
@@ -79,7 +79,7 @@ def reward_func(queries, prompts, labels):
         "acc_reward": torch.tensor(accuracy_rewards, dtype=torch.float32),
         "format_reward": torch.tensor(format_rewards, dtype=torch.float32),
         "aux_reward": torch.tensor(aux_rewards, dtype=torch.float32),
-        # "length_reward": torch.tensor(length_rewards, dtype=torch.float32),
+        "length_reward": torch.tensor(length_rewards, dtype=torch.float32),
     }
 
 
