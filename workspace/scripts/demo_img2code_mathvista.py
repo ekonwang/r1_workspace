@@ -178,13 +178,12 @@ Please look at the geometry diagram and adjust the python code.
                 error_msg = exec_result[1]
         
         if error_msg is None:
-            import pdb; pdb.set_trace()
             # need to refine
             if not _refine_already:
                 generated_img = exec_result[2][0]
                 prompt += REFINE_PROMPT.format(generated_img=generated_img)
-                pcode = result['content']
-                _refine_alread = True
+                # pcode = result['content']
+                _refine_already = True
             else:
                 pcode = result['content']
                 print_error(f'break {i}')
