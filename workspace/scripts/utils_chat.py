@@ -37,7 +37,7 @@ class Parser:
             return {'status': False, 'content': content, 'message': f"Unexpected {type(err)}: {err}.", 'error_code': 'unknown'}
 
 
-def chat_gpt4o(prompt: str, history_messages = None):
+def chat_gpt4o(prompt: str, history_messages = None, temperature=0):
     # 插入图片：
     # <img src='/Users/mansionchieng/Workspaces/vlm_workspace/workspace/outputs/geometry_prompt6_d2_b100/test_geomverse_TEST_D2_B100_data_1/1.png'>
     
@@ -45,7 +45,12 @@ def chat_gpt4o(prompt: str, history_messages = None):
         history_messages = []
     clean_messages = history_messages + [{"role": "user", "content":  prompt}]
     dirty_messages = [{'role': mdict['role'], 'content': gpt4v_formatter(mdict['content'])} for mdict in clean_messages]
-    client = OpenAIWrapper(**llm_config)
+
+    temp_llm_config = llm_config.copy()
+    if temperature > 0:
+        temp_llm_config['config_list'][0]['temperature'] = temperature
+
+    client = OpenAIWrapper(**temp_llm_config)
     response = client.create(
         messages=dirty_messages,
         temperature=0.8,

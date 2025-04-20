@@ -30,6 +30,7 @@ class CodeExecutor:
         
         # initialize the environment
         self.init_env(use_vision_tools)
+        self.file_idx = 0
         
     def result_processor(self, result):
         # Change an IPythonCodeResult object to a string, and the list of files
@@ -72,6 +73,14 @@ class CodeExecutor:
         
         if len(file_paths) > 0:
             output_lines = output_lines[:-2*len(file_paths)]
+        
+        # replace the file name with the file index
+        for _, file_path in enumerate(file_paths):
+            dir_name = os.path.dirname(file_path)
+            new_file_path = f"{dir_name}/file_{self.file_idx}.png"
+            os.rename(file_path, new_file_path)
+            file_paths[_] = new_file_path
+            self.file_idx += 1
             
         # if execution succeeded, replace PIL images with their file paths
         if exit_code == 0:
