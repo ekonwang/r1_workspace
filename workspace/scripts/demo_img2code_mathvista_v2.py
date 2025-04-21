@@ -259,6 +259,14 @@ You must first analyze the target geometry and the generated geometries, then ch
     return pcode
 
 
+def __check_done(task_path):
+    # 如果 task_path 下有selected_image*.png，则认为已经处理过
+    if os.path.isdir(task_path):
+        for file in os.listdir(task_path):
+            if file.startswith('selected_image'):
+                return True
+    return False
+
 
 if __name__ == "__main__":
     dataset = load_dataset('AI4Math/MathVista', split='testmini')
@@ -290,6 +298,9 @@ if __name__ == "__main__":
         buffer = sys.stdout
 
         task_path = os.path.join(OUTPUT_DIR, f'{idx:04d}')
+        if __check_done(task_path):
+            print_error(f"Already processed {idx}")
+            continue
         shutil.rmtree(task_path, ignore_errors=True)
         os.makedirs(task_path, exist_ok=True)
         try:

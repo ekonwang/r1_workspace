@@ -37,25 +37,33 @@ class Parser:
             return {'status': False, 'content': content, 'message': f"Unexpected {type(err)}: {err}.", 'error_code': 'unknown'}
 
 
-def chat_gpt4o(prompt: str, history_messages = None, temperature=0):
+def chat_gpt4o(prompt: str, history_messages = None, temperature=0, max_retry=3):
     # 插入图片：
     # <img src='/Users/mansionchieng/Workspaces/vlm_workspace/workspace/outputs/geometry_prompt6_d2_b100/test_geomverse_TEST_D2_B100_data_1/1.png'>
     
-    if history_messages is None:
-        history_messages = []
-    clean_messages = history_messages + [{"role": "user", "content":  prompt}]
-    dirty_messages = [{'role': mdict['role'], 'content': gpt4v_formatter(mdict['content'])} for mdict in clean_messages]
+    for i in range(max_retry):
+        try:
+            if history_messages is None:
+                history_messages = []
+            clean_messages = history_messages + [{"role": "user", "content":  prompt}]
+            dirty_messages = [{'role': mdict['role'], 'content': gpt4v_formatter(mdict['content'])} for mdict in clean_messages]
 
-    temp_llm_config = llm_config.copy()
-    if temperature > 0:
-        temp_llm_config['config_list'][0]['temperature'] = temperature
+            temp_llm_config = llm_config.copy()
+            if temperature > 0:
+                temp_llm_config['config_list'][0]['temperature'] = temperature
 
-    client = OpenAIWrapper(**temp_llm_config)
-    response = client.create(
-        messages=dirty_messages,
-        temperature=0.8,
-    )
-    messages = clean_messages + [{"role": "assistant", "content": response.choices[0].message.content}]
-    return response.choices[0].message.content, messages
+            client = OpenAIWrapper(**temp_llm_config)
+            response = client.create(
+                messages=dirty_messages,
+                temperature=0.8,
+            )
+            messages = clean_messages + [{"role": "assistant", "content": response.choices[0].message.content}]
+            return response.choices[0].message.content, messages
+        except Exception as err:
+            if i == max_retry - 1:
+                raise err
+            else:
+                continue
+
 
 
