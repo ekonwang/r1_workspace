@@ -87,12 +87,17 @@ class ShuffleVoteModel(VoteModel):
             }
             vote_prompt = self.__format_inputs(shuffled_inputs)
             response_idx = self._get_single_vote(vote_prompt, max_vote_idx=len(img_str_list) - 1)
-            response_idx = index_mapping[response_idx]
-            if DEBUG_MODE:
-                print_error('[DEBUG] ' + f"Vote result: {response_idx}")
+
             if response_idx is not None:
+                response_idx = index_mapping[response_idx]
+                if DEBUG_MODE:
+                    print_error('[DEBUG] ' + f"Vote result: {response_idx}")
                 vote_results.append(response_idx)
             else:
                 print_error("Failed to get a valid vote result")
+            
 
-        return max(set(vote_results), key=vote_results.count)
+        final_index = max(set(vote_results), key=vote_results.count)
+        if DEBUG_MODE:
+            print_error(f"[DEBUG] Final Vote result: {final_index}")
+        return final_index

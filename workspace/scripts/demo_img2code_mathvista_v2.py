@@ -17,7 +17,7 @@ from utils import load_jsonl, mk_pbar, save_jsonl, print_error
 from datasets import load_dataset
 from utils_inference import VoteModel, ShuffleVoteModel
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 CODE_FORMAT = """
 You code need to incorporate the following sections:
@@ -239,9 +239,8 @@ You must first analyze the target geometry and the generated geometries, then ch
 {idx}. <img src='{img_str}'>
 """
     # vote_prompt = VOTE_PROMPT.format(target_geometry=image_url, generated_geometries=generated_geometries)
-    
     # vote_model = VoteModel(vote_prompt=vote_prompt)
-
+    
     vote_model = ShuffleVoteModel(vote_prompt=VOTE_PROMPT)
     vote_result = vote_model.vote(vote_times=5, inputs={
         'img_str_list': img_str_list,
@@ -249,8 +248,6 @@ You must first analyze the target geometry and the generated geometries, then ch
     })
 
     # select the code with the most similar geometry
-    if DEBUG_MODE:
-        print_error(f"[DEBUG] Final Vote result: {vote_result}")
     pcode = code_list[vote_result]
     img_str = img_str_list[vote_result] 
 
@@ -258,7 +255,6 @@ You must first analyze the target geometry and the generated geometries, then ch
     img_path = img_str.split("'", 1)[1].split("'", 1)[0]
     # 复制为 selected_image.png
     shutil.copy(img_path, os.path.join(working_dir, f'selected_image_{vote_result}.png'))
-    
 
     return pcode
 
@@ -266,7 +262,7 @@ You must first analyze the target geometry and the generated geometries, then ch
 
 if __name__ == "__main__":
     dataset = load_dataset('AI4Math/MathVista', split='testmini')
-    OUTPUT_DIR = '.temp/datasets/mathvista-geometry'
+    OUTPUT_DIR = '.temp/datasets/mathvista-geometry-v2'
 
 
     def is_geometry(data):
@@ -300,18 +296,6 @@ if __name__ == "__main__":
             # with open(f'./temp_{idx}.txt', 'w') as f:
             #     sys.stdout = f
             question_type = data['question_type']
-            # if question_type == 'multi_choice':
-#                 raw_question = data['question']
-#                 question = f"""
-# {raw_question}
-
-# A. {data['A']}
-# B. {data['B']}
-# C. {data['C']}
-# D. {data['D']}
-
-# Please give the correct answer of the option letter (A, B, C, or D).
-# """
             question = data['question']
             answer = data['answer']
             question_type = data['question_type']
@@ -328,10 +312,10 @@ if __name__ == "__main__":
             pcode = process_data(image_path)
             sys.stdout = buffer
             # import pdb; pdb.set_trace()
-            if pcode:
-                print(pcode.replace('\n', '\\n') + '\n\n' + '=' * 50 + '\n\n')
-            else:
-                continue
+            # if pcode:
+            #     print(pcode.replace('\n', '\\n') + '\n\n' + '=' * 50 + '\n\n')
+            # else:
+            #     continue
 
             processed_dataset.append({
                 'question': question,
