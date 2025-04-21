@@ -271,6 +271,7 @@ def __check_done(task_path):
 if __name__ == "__main__":
     dataset = load_dataset('AI4Math/MathVista', split='testmini')
     OUTPUT_DIR = '.temp/datasets/mathvista-geometry-v2'
+    RESULT_FILE = os.path.join(OUTPUT_DIR, 'processed_dataset.jsonl')
 
 
     def is_geometry(data):
@@ -285,7 +286,11 @@ if __name__ == "__main__":
                 return False 
         return True
 
-    processed_dataset = []
+    if os.path.exists(RESULT_FILE):
+        processed_dataset = load_jsonl(RESULT_FILE)
+    else:
+        processed_dataset = []
+
     is_geo_flags = [is_geometry(data) for data in dataset]
     dataset = [d for d, flag in zip(dataset, is_geo_flags) if flag]
     dataset = [d for d in dataset if filter_fn(d)]
@@ -350,4 +355,4 @@ if __name__ == "__main__":
                     raise e
             continue
 
-        save_jsonl(processed_dataset, os.path.join(OUTPUT_DIR, 'processed_dataset.jsonl'))
+        save_jsonl(processed_dataset, RESULT_FILE)
