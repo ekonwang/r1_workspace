@@ -145,7 +145,7 @@ def _eval_mathvista_(example: dict):
 
         if example["question_type"] == "multi_choice":
             problem = f"""
-{example["problem"]}
+{example["question"]}
 
 A. {example["choices"][0]}
 B. {example["choices"][1]}
@@ -154,7 +154,7 @@ D. {example["choices"][3]}
     """
             prompt = MULTI_CHOICE_QUESTION.format(problem=problem, code=example["code"])
         else:
-            problem = example["problem"]
+            problem = example["question"]
             prompt = NUMERICAL_QUESTION.format(problem=problem, code=example["code"])
 
         return {
@@ -477,7 +477,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, required=True, default='.temp/models/Qwen_Qwen2.5-3B-Instruct')
-    parser.add_argument("--output_path", type=str, default='.temp/outputs_v4')
+    parser.add_argument("--output_path", type=str, default='.temp/outputs_v5')
     parser.add_argument("--dataset_path", type=str, default='Geomverse-D2')
     parser.add_argument("--verbose", action='store_true', help='output verbose info for debug.')
     return parser.parse_args()
@@ -522,7 +522,7 @@ if __name__ == "__main__":
         },
         "MathVista": {
             "output_path": "OOD-MathVista",
-            "load_path": ".temp/temp.jsonl",
+            "load_path": ".temp/datasets/mathvista-geometry-v2/processed_dataset.jsonl",
         }
     }
 
