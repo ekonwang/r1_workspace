@@ -81,6 +81,33 @@ class GeomverseJsonlDataset(Dataset):
         return self.data[idx]
 
 
+class JsonlDataset(Dataset):
+    def __init__(self, file_path, sample_size=None, mask_coordinates=True):
+        """
+        Args:
+            file_path (str): Path to the JSONL file.
+        """
+        assert sample_size is None or (isinstance(sample_size, int) and sample_size > 0)
+        
+        self.data = []
+        with jsonlines.open(file_path) as reader:
+            for obj in tqdm(reader):
+                new_obj = obj.copy()
+
+                # make some changes necessary for the model
+                self.data.append(new_obj)
+                
+                if sample_size is not None:
+                    if len(self.data) >= sample_size:
+                        break
+
+    def __len__(self):
+        return len(self.data)
+
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+
 class Geometry3kDataset(Dataset):
     def __init__(self, file_path, sample_size=None):
         """
@@ -150,6 +177,11 @@ def load_geomverse_dataset(file_path, train_split_ratio=0.8, sample_size=None, m
     # Split the dataset into train and test
     train_dataset, test_dataset = torch.utils.data.random_split(dataset, [train_size, test_size])
     return train_dataset, test_dataset
+
+
+def load_jsonl_dataset(file_path, sample_size=None):
+    dataset = JsonlDataset(file_path, sample_size)
+    return dataset
 
 
 def load_custom_dataset(file_path, train_split_ratio=0.8, sample_size=None, mask_coordinates=True):
