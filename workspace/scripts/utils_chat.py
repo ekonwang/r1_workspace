@@ -7,7 +7,7 @@ from autogen.agentchat.contrib.img_utils import (
 )
 from autogen.oai.client import OpenAIWrapper
 from config import llm_config
-
+from utils import print_error
 
 class Parser:
     def parse(self, response):
@@ -63,7 +63,7 @@ def chat_gpt4o(prompt: str, history_messages = None, temperature=0, max_retry=3)
             if i == max_retry - 1:
                 raise err
             else:
+                print_error(err)
                 continue
-
 
 
