@@ -10,6 +10,7 @@ EDIT_TEMPLATE = "{Question}  Output the thinking process in <think> </think> and
         "Here is the tikz code for the geometry problem:```\n{tikz}\n```"\
         "Optionally, consider to edit the tikz code to construct auxiliary lines in the thinking process, which should be marked with <auxiliary> </auxiliary> tags."
 
+
 def _mask_coordinates(tikz_code):
     """
     将 TikZ 代码中的所有具体坐标数值替换为 [MASK_VALUE]。
@@ -37,6 +38,7 @@ def _mask_coordinates(tikz_code):
     masked_code = re.sub(radius_pattern, "radius=[MASK_VALUE]", masked_code)
 
     return masked_code
+
 
 def format_data(data, edit=False):
     tikz_code = data['tikz']

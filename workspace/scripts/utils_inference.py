@@ -54,6 +54,7 @@ Please try again.
 
 
 class ShuffleVoteModel(VoteModel):
+    """The VoteModel that shuffle the inputs, in order to prevent positional bias in `ChatGPT` models."""
     def __init__(self, vote_prompt, error_prompt=ERROR_PROMPT, chat_func=chat_gpt4o):
         super().__init__(vote_prompt, error_prompt, chat_func)
 

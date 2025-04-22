@@ -14,9 +14,9 @@ def load_json_file(file_path):
         return json.load(f)
 
 
-def _mask_coordinates(tikz_code):
+def _mask_tikz_coordinates(tikz_code):
     """
-    将 TikZ 代码中的所有具体坐标数值替换为 [MASK_VALUE]。
+    防止 reasoning model 在推理中直接利用 coordinates 信息解题 (reward hacking) , 将 TikZ 代码中的所有具体坐标数值替换为 [MASK_VALUE]。
 
     参数:
         tikz_code (str): 输入的 TikZ 代码字符串。
@@ -30,16 +30,31 @@ def _mask_coordinates(tikz_code):
     # 匹配 radius 的正则表达式
     radius_pattern = r'radius\s*=\s*(-?\d+\.?\d*)'
 
-    # 替换函数，将匹配到的坐标或 radius 替换为 [MASK_VALUE]
-    def replace_with_mask(match):
-        return "([MASK_VALUE], [MASK_VALUE])" if match.group(1) else f"radius=[MASK_VALUE]"
-
     # 使用 re.sub 替换所有匹配的坐标
     masked_code = re.sub(coordinate_pattern, "([MASK_VALUE], [MASK_VALUE])", tikz_code)
 
     # 使用 re.sub 替换所有匹配的 radius
     masked_code = re.sub(radius_pattern, "radius=[MASK_VALUE]", masked_code)
 
+    return masked_code
+
+
+def _mask_coordinates(tikz_code):
+    """The pointer to the function `_mask_tikz_coordinates`, by default."""
+    return _mask_tikz_coordinates(tikz_code)
+
+
+def _mask_python_coordinates(python_code):
+    """
+    将 Python 代码中的所有具体坐标数值替换为 [MASK_VALUE]。
+    - 所有类似于：: (1, 2) 的数值都替换为 : ([MASK_VALUE], [MASK_VALUE])
+
+    参数:
+        python_code (str): 输入的 Python 代码字符串。
+    """
+
+    pattern = r':\s*\((-?\d+\.?\d*),\s*(-?\d+\.?\d*)\)'
+    masked_code = re.sub(pattern, ': ([MASK_VALUE], [MASK_VALUE])', python_code)
     return masked_code
 
 
@@ -235,8 +250,12 @@ if __name__ == "__main__":
 \draw (-8.77681, 6.63081) -- node[left,xshift=-5mm,pos=3.59138,font=\Huge](){J}(-8.77681, 6.63081);
 \draw (-15.40762, -2.146) -- node[left,xshift=-5mm,pos=6.22728,font=\Huge](){K}(-15.40762, -2.146);
 """
+    python_input = "\nimport matplotlib.pyplot as plt\n\n# Helper function for drawing lines\ndef draw_lines(ax, p1, p2, **kwargs):\n    ax.plot([p1[0], p2[0]], [p1[1], p2[1]], color='black', **kwargs)\n\n# Updated points based on target diagram's proportions\npoints = {\n    'A': (2.5, 2.5),   # Higher, but not as high as before\n    'B': (0, 0),       # Bottom-left\n    'C': (5, 0),       # Bottom-right, wider base\n    'O': (3.2, 1),     # Closer to BC, slightly right of center\n}\n\nfig, ax = plt.subplots(figsize=(5, 3))\n\n# Draw triangle ABC\ndraw_lines(ax, points['A'], points['B'])\ndraw_lines(ax, points['A'], points['C'])\ndraw_lines(ax, points['B'], points['C'])\n\n# Draw triangle BOC\ndraw_lines(ax, points['B'], points['O'])\ndraw_lines(ax, points['C'], points['O'])\n\n# Annotate the points\nax.text(points['A'][0], points['A'][1] + 0.2, 'A', fontsize=12, ha='center')\nax.text(points['B'][0] - 0.2, points['B'][1] - 0.2, 'B', fontsize=12, ha='center')\nax.text(points['C'][0] + 0.2, points['C'][1], 'C', fontsize=12, ha='center')\nax.text(points['O'][0], points['O'][1] - 0.2, 'O', fontsize=12, ha='center')\n\n# Figure formatting\nax.set_aspect('equal')\nax.set_xticks([])\nax.set_yticks([])\nfor spine in ax.spines.values():\n    spine.set_visible(False)\n\nplt.show()\n"
 
     # 调用函数并打印结果
-    masked_output = _mask_coordinates(tikz_input)
-    print(masked_output)
+    # masked_output = _mask_coordinates(tikz_input)
+    # print(masked_output)
+
+    masked_python = _mask_python_coordinates(python_input)
+    print(masked_python)
 
