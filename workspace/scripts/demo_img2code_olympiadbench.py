@@ -17,7 +17,7 @@ from utils import load_jsonl, mk_pbar, save_jsonl, print_error
 from datasets import load_dataset
 from utils_inference import VoteModel, ShuffleVoteModel
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 
 CODE_FORMAT = """
 You code need to incorporate the following sections:
