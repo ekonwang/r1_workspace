@@ -24,6 +24,9 @@ from math_verify import ExprExtractionConfig, LatexExtractionConfig, StringExtra
 from transformers import AutoTokenizer
 
 # --- v5: append the mathvista and olympiadbench benchmarks --- #
+# --- v6: change the maxlen params for pass@1 --- #
+
+MAXLEN = 4096
 
 class VLMEval:
     def __init__(
@@ -31,7 +34,7 @@ class VLMEval:
         model_name: str,
         tensor_parallel_size: int = 1,
         gpu_memory_utilization: float = 0.9,
-        max_model_len: int = 2048,
+        max_model_len: int = MAXLEN * 2,
         dtype: str = "bfloat16",
         **kwargs
     ):
@@ -60,9 +63,9 @@ class VLMEval:
         
         # Default sampling parameters
         self.default_sampling_params = SamplingParams(
-            temperature=0.0,
+            temperature=0,
             top_p=1.0,
-            max_tokens=2048
+            max_tokens=MAXLEN
         )
 
         self.processor = AutoTokenizer.from_pretrained(model_name)
@@ -491,7 +494,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
     bon_sampling_params = SamplingParams(
         temperature=0.8,
         top_p=1.0,
-        max_tokens=2048
+        max_tokens=MAXLEN
     )
     
     assert len(bon_prompts) == len(dataset) * bon_num
@@ -521,7 +524,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, required=True, default='.temp/models/Qwen_Qwen2.5-3B-Instruct')
-    parser.add_argument("--output_path", type=str, default='.temp/outputs_v5')
+    parser.add_argument("--output_path", type=str, default='.temp/outputs_v6')
     parser.add_argument("--dataset_path", type=str, default='Geomverse-D2')
     parser.add_argument("--verbose", action='store_true', help='output verbose info for debug.')
     return parser.parse_args()
