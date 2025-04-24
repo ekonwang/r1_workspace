@@ -317,6 +317,10 @@ if __name__ == "__main__":
         try:
             image_path = data['subdir_path'] + '/img_diagram.png'
             point_positions = data['point_positions']
+
+            image = Image.open(image_path)
+            task_image_path = os.path.join(task_path, 'image.png')
+            image.save(task_image_path)
             # question = data['question']
             # answer = data['final_answer'][0]
             # image = data['images'][0]
@@ -330,7 +334,7 @@ if __name__ == "__main__":
             # save image into task_path + '/image.png'
             # image.save(image_path)
             
-            pcode = process_data(image_path, point_positions)
+            pcode = process_data(task_image_path, point_positions)
             sys.stdout = buffer
             # if pcode:
             #     print(pcode.replace('\n', '\\n') + '\n\n' + '=' * 50 + '\n\n')
