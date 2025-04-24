@@ -569,7 +569,7 @@ if __name__ == "__main__":
         },
         "MathVista": {
             "output_path": "OOD-MathVista",
-            "load_path": ".temp/datasets/mathvista-geometry-v2/processed_dataset.jsonl",
+            "load_path": ".temp/datasets/gps-mathvista-geometry-v2/processed_dataset.jsonl",
         },
         'OlympiadBench': {
             "output_path": "OOD-OlympiadBench",
