@@ -28,6 +28,7 @@ def load_train_data(train_data_path):
             logic_form = json.load(open(os.path.join(subdir_path, "logic_form.json")))
             data['subdir_path'] = subdir_path
             data['logic_form'] = logic_form['diagram_logic_form']
+            data['point_positions'] = logic_form['point_positions']
             train_data.append(data)
 
     return train_data
@@ -46,6 +47,7 @@ def main():
         for t in train_data:
             if t['problem_text'] in d['prompt'] and d['diagram_logic_form'] == t['logic_form']:
                 d['subdir_path'] = t['subdir_path']
+                d['point_positions'] = t['point_positions']
                 print(f"Match Found: {d['subdir_path']}")
                 new_data.append(d)
                 __flag = 1
