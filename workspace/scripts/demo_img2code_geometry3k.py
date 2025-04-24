@@ -17,6 +17,10 @@ from utils import load_jsonl, mk_pbar, save_jsonl, print_error
 from datasets import load_dataset
 from utils_inference import VoteModel, ShuffleVoteModel
 
+# disable warnings
+import warnings
+warnings.filterwarnings('ignore')
+
 DEBUG_MODE = True
 
 CODE_FORMAT = """
