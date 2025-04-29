@@ -121,32 +121,44 @@ def __exec_prompt(prompt, parser, executor, max_num_retry=3, temperature=0.8):
     if DEBUG_MODE or VERBOSE_MODE:
         print_error('[DEBUG] ' + content.replace('\n', '\\n'))
 
-    for i in range(max_num_retry):
-        result = parser.parse(content)
-        if not result['status']:
-            error_msg = result['message']
-        else:
-            exec_result = executor.execute(result['content'])
-            if exec_result[0] == 0:
-                return {
-                    "img_str": exec_result[1],
-                    "code": result['content']
-                }
+    try:
+        for i in range(max_num_retry):
+            result = parser.parse(content)
+            if not result['status']:
+                error_msg = result['message']
             else:
-                error_msg = exec_result[1]
-        
-        # ERROR Branch
-        prompt = f"""
-        OBSERVATION: Parsing or Execution error. Error message:
-        {error_msg}
-        Please fix the error and generate the fixed code.
-        """
-        if DEBUG_MODE or VERBOSE_MODE:
-            print_error('[DEBUG] ' + prompt.replace('\n', '\\n') + '\n\n')
+                exec_result = executor.execute(result['content'])
+
+                if exec_result[0] == 0:
+                    # 4.29 error
+                    file_paths = exec_result[2]
+                    img_path = file_paths[0]
+                    # 如果图片大小超过 256K, 则报错
+                    if os.path.getsize(img_path) > 256 * 1024:
+                        raise Exception(f"Image size is too large: {os.path.getsize(img_path)}")
+                    
+                    return {
+                        "img_str": exec_result[1],
+                        "code": result['content']
+                    }
+                else:
+                    error_msg = exec_result[1]
             
-        content, messages = chat_gpt4o(prompt, messages, temperature=temperature)
-        if DEBUG_MODE or VERBOSE_MODE:
-            print_error('[DEBUG] ' + content.replace('\n', '\\n') + '\n\n')
+            # ERROR Branch
+            prompt = f"""
+            OBSERVATION: Parsing or Execution error. Error message:
+            {error_msg}
+            Please fix the error and generate the fixed code.
+            """
+            if DEBUG_MODE or VERBOSE_MODE:
+                print_error('[DEBUG] ' + prompt.replace('\n', '\\n') + '\n\n')
+                
+            content, messages = chat_gpt4o(prompt, messages, temperature=temperature)
+            if DEBUG_MODE or VERBOSE_MODE:
+                print_error('[DEBUG] ' + content.replace('\n', '\\n') + '\n\n')
+    except Exception as e:
+        print_error(f"Error: {e}")
+        return None
     
     return None
 

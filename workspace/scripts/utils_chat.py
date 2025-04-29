@@ -37,6 +37,44 @@ class Parser:
             return {'status': False, 'content': content, 'message': f"Unexpected {type(err)}: {err}.", 'error_code': 'unknown'}
 
 
+class GlobalParser:
+    def parse(self, response, language='python'):
+        if isinstance(response, dict) and 'content' in response:
+            response = response['content']
+        # oring_content = response.replace("\_", "_")
+        content = response.replace("\\", "")
+        
+        try:
+            
+            start_pos = content.find(f"```{language}")
+            if start_pos != -1:
+                content = content[start_pos+len(f"```{language}"):]
+
+            end_pos = content.find("```")
+            if end_pos != -1:
+                content = content[:end_pos]
+            
+            if start_pos == -1 or end_pos == -1:
+                return {'status': False, 'content': content, 'message': f'Program is NOT enclosed in ```{language}``` properly.', 'error_code': 'unknown'}
+            if len(content) > 0:
+                compile(content, "prog.py", "exec")
+                return {'status': True, 'content': content, 'message': 'Parsing succeeded.', 'error_code': ''}
+            else:
+                return {'status': False, 'content': content, 'message': "The content is empty, or it failed to parse the content correctly.", 'error_code': 'unknown'}
+        except Exception as err:
+            return {'status': False, 'content': content, 'message': f"Unexpected {type(err)}: {err}.", 'error_code': 'unknown'}
+
+    def global_parse(self, response):
+        supported_languages = ['python', 'tikz']
+        for language in supported_languages:
+            result = self.parse(response, language)
+            if result['status']:
+                result['language'] = language
+                return result
+        return result
+
+
+
 def chat_gpt4o(prompt: str, history_messages = None, temperature=0, max_retry=3):
     # 插入图片：
     # <img src='/Users/mansionchieng/Workspaces/vlm_workspace/workspace/outputs/geometry_prompt6_d2_b100/test_geomverse_TEST_D2_B100_data_1/1.png'>
