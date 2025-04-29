@@ -22,6 +22,10 @@ import warnings
 warnings.filterwarnings('ignore')
 
 DEBUG_MODE = True
+VERBOSE_MODE = True
+
+if DEBUG_MODE:
+    VERBOSE_MODE = True
 
 CODE_FORMAT = """
 You code need to incorporate the following sections:
@@ -114,7 +118,7 @@ def convert_jpeg_to_png(input_image_path, target_dir=None):
 
 def __exec_prompt(prompt, parser, executor, max_num_retry=3, temperature=0.8):
     content, messages = chat_gpt4o(prompt, temperature=temperature)
-    if DEBUG_MODE:
+    if DEBUG_MODE or VERBOSE_MODE:
         print_error('[DEBUG] ' + content.replace('\n', '\\n'))
 
     for i in range(max_num_retry):
@@ -137,8 +141,11 @@ def __exec_prompt(prompt, parser, executor, max_num_retry=3, temperature=0.8):
         {error_msg}
         Please fix the error and generate the fixed code.
         """
+        if DEBUG_MODE or VERBOSE_MODE:
+            print_error('[DEBUG] ' + prompt.replace('\n', '\\n') + '\n\n')
+            
         content, messages = chat_gpt4o(prompt, messages, temperature=temperature)
-        if DEBUG_MODE:
+        if DEBUG_MODE or VERBOSE_MODE:
             print_error('[DEBUG] ' + content.replace('\n', '\\n') + '\n\n')
     
     return None
