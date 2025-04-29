@@ -286,7 +286,7 @@ def __check_done(task_path):
 def __get_already_processed_idxs(processed_dataset_dict):
     already_processed_idx = []
     for idx, data in processed_dataset_dict.items():
-        if data['code']:
+        if 'code' in data and data['code']:
             already_processed_idx.append(idx)
     return already_processed_idx
 
@@ -301,7 +301,7 @@ if __name__ == "__main__":
 
     # processed_dataset = load_jsonl(dataset)
 
-    processed_dataset_dict = {idx: d for idx, d in enumerate(dataset)}
+    processed_dataset_dict = {str(idx): d for idx, d in enumerate(dataset)}
     if os.path.exists(RESULT_FILE):
         processed_dataset_dict = json.load(open(RESULT_FILE))
     processed_dataset = list(processed_dataset_dict.values())
@@ -310,7 +310,7 @@ if __name__ == "__main__":
     for idx, _ in enumerate(mk_pbar(range(len(processed_dataset_dict)), desc="Processing Whole Dataset")):
         # data = dataset[idx]
         buffer = sys.stdout
-        data = processed_dataset_dict[idx].copy()
+        data = processed_dataset_dict[str(idx)].copy()
 
         task_path = os.path.join(OUTPUT_DIR, f'{idx:04d}')
         if __check_done(task_path):

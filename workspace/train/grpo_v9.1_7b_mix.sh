@@ -8,6 +8,7 @@ set -x
 # v7.3: v7 + more samples per prompt
 # v8: v5.1 + group contrastive GRPO
 # v9: v8 + longer cot reward
+# v9.1: gc length contrastive mode
 
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace
 source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/bin/activate /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/envs/open-rlhf

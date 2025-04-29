@@ -8,13 +8,13 @@ set -x
 # v7.3: v7 + more samples per prompt
 # v8: v5.1 + group contrastive GRPO
 # v9: v8 + longer cot reward
-# v9.1: gc length contrastive mode
+# v9.2: v9 + gc epsilon 0.01
 
 cd /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/r1_workspace
 source /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/bin/activate /inspire/hdd/ws-f4d69b29-e0a5-44e6-bd92-acf4de9990f0/public-project/wangyikun-240108120104/software/miniconda3/envs/open-rlhf
 
-OUTPUT_DIR='./outputs/v9.1-mix-grpo-3b'
-MODEL=.temp/models/Qwen_Qwen2.5-3B-Instruct
+OUTPUT_DIR='./outputs/v9.2-mix-grpo-7b'
+MODEL=.temp/models/Qwen_Qwen2.5-7B-Instruct
 REWARD=workspace/reward/reward_func_relax_v9.py
 PROMPT=.temp/datasets/0328_mix/data.jsonl
 
@@ -27,9 +27,9 @@ export REWARD_LOG_PATH="${OUTPUT_DIR}/reward.log"
 echo '' > ${REWARD_LOG_PATH}
 
 # For GC reward module
-export GROUP_LENGTH_CONSTRASTIVE_MODE=1
-export GC_LOG_PATH="${OUTPUT_DIR}/gc_length_reward_log.log"
-export GROUP_CONSTRASTIVE_EPSILON=0.05
+export GROUP_CONSTRASTIVE_MODE=1
+export GC_LOG_PATH="${OUTPUT_DIR}/gc_reward_log.log"
+export GROUP_CONSTRASTIVE_EPSILON=0.01
 echo '' > ${GC_LOG_PATH}
 
 if [ ! -d "$OUTPUT_DIR" ]; then

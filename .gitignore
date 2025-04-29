@@ -2,6 +2,7 @@
 *pycache*
 *.log
 *output*
+*jupyter_gateway*
 
 *.log
 *.txt
