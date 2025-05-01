@@ -6,6 +6,42 @@ import torch
 from math_verify import ExprExtractionConfig, LatexExtractionConfig, StringExtractionConfig, parse, verify
 from transformers import AutoTokenizer
 
+# tikz execution
+from utils_tikz import TikZRenderer
+from utils_python import CodeExecutor
+
+
+class GlobalParser:
+    def parse(self, response, language='python'):
+        if isinstance(response, dict) and 'content' in response:
+            response = response['content']
+        # oring_content = response.replace("\_", "_")
+        content = response.replace("\\", "")
+        
+        try:
+            
+            start_pos = content.find(f"```{language}")
+            if start_pos != -1:
+                content = content[start_pos+len(f"```{language}"):]
+
+            end_pos = content.find("```")
+            if end_pos != -1:
+                content = content[:end_pos]
+            
+            if start_pos == -1 or end_pos == -1:
+                return {'status': False, 'content': content, 'message': f'Program is NOT enclosed in ```{language}``` properly.', 'error_code': 'unknown'}
+            if len(content) > 0:
+                compile(content, "prog.py", "exec")
+                return {'status': True, 'content': content, 'message': 'Parsing succeeded.', 'error_code': ''}
+            else:
+                return {'status': False, 'content': content, 'message': "The content is empty, or it failed to parse the content correctly.", 'error_code': 'unknown'}
+        except Exception as err:
+            return {'status': False, 'content': content, 'message': f"Unexpected {type(err)}: {err}.", 'error_code': 'unknown'}
+
+    def global_parse(self, response, language='python'):
+        return self.parse(response, language)
+
+
 __workspace_path = os.path.dirname(os.path.abspath(__file__)) + '/..'
 __text_tokenizer = AutoTokenizer.from_pretrained(__workspace_path + "/tokenizer")
 
@@ -102,6 +138,31 @@ def aux_line_reward_v2_func(completion, **kwargs):
     return 0.5 if match else 0.0
 
 
+def aux_line_reward_v3_func(prompt, completion, executor, parser: GlobalParser, amp_value: float = 0.5, **kwargs):
+    """Reward function that checks if the completion has a specific format."""
+    assert '```python' in prompt or '```tikz' in prompt, "Prompt must contain ```python or ```tikz"
+
+    if '```python' in prompt:
+        language = 'python'
+    else:
+        language = 'tikz'
+
+    result = parser.global_parse(completion, language)
+    if not result['status']:
+        # failed to parse the completion
+        return 0.0
+    
+    if language == 'python':
+        return amp_value
+    else:
+        tikz_code = result['content']
+        exec_result = executor.render(tikz_code)
+        if exec_result is None:
+            return 0.0
+        else:
+            return amp_value
+
+
 def length_reward_func(completion: str, max_length=900, beta:float=0.5, **kwargs):
     """Reward function that checks if the completion has a specific format."""
     tokenized_length = len(__get_tokens(completion))
@@ -109,6 +170,21 @@ def length_reward_func(completion: str, max_length=900, beta:float=0.5, **kwargs
 
 
 if __name__ == "__main__":
-    test_completion = "Hello, world!"
+    # test_completion = "Hello, world!"
     # print(len(tiktoken.encoding_for_model("gpt-4o").encode(test_completion)))
-    print(length_reward_func(test_completion))
+    # print(length_reward_func(test_completion))
+
+    parser = GlobalParser()
+    # python_executor = CodeExecutor('workspace/reward/.temp/code_executor')
+    executor = TikZRenderer('workspace/reward/.temp/code_executor')
+    # tikz branch, right tikz code
+    print(aux_line_reward_v3_func("```tikz\n\\begin{tikzpicture}\n\\end{tikzpicture}\n```", "```tikz\n\\begin{tikzpicture}\n\\end{tikzpicture}\n```", executor, parser))
+    # tikz branch, wrong tikz code
+    print(aux_line_reward_v3_func("```tikz\n\\begin{tikzpicture}\n\\end{tikzpicture}\n```", "```tikz\nprint('Hello, world!')\n```", executor, parser))
+
+    # python branch, right python code
+    print(aux_line_reward_v3_func("```python\nprint('Hello, world!')\n```", "```python\nprint('Hello, world!')\n```", executor, parser))
+    # python branch, wrong python code
+    print(aux_line_reward_v3_func("```python\nprint('Hello, world!')\n```", "```python\nprint('Hello, world!')\n", executor, parser))
+    
+    
