@@ -7,7 +7,7 @@ import json
 import shutil
 
 from utils_chat import chat_gpt4o, Parser
-from utils_execution import CodeExecutor
+from utils_execution import CodeExecutor, SandboxCodeExecutor
 
 from PIL import Image
 import sys 
@@ -183,7 +183,8 @@ def process_data(image_path, point_positions = None, max_num_retry=3):
     working_dir = os.path.dirname(image_path)
     image_path = convert_jpeg_to_png(image_path)
     parser = Parser()
-    executor = CodeExecutor(working_dir)
+    # executor = CodeExecutor(working_dir)
+    executor = SandboxCodeExecutor(working_dir)
     image_url = f"<img src='{image_path}'>"
 
     with open(f'{os.path.dirname(__file__)}/utils_geometry.py', 'r') as f:
