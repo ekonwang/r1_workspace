@@ -21,7 +21,7 @@ from utils_inference import VoteModel, ShuffleVoteModel
 import warnings
 warnings.filterwarnings('ignore')
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 VERBOSE_MODE = True
 
 if DEBUG_MODE:
@@ -93,6 +93,17 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ax.spines['bottom'].set_visible(False)
 ax.spines['left'].set_visible(False)
+
+# 自动调整视图以包含所有元素
+ax.autoscale_view()
+
+# 为了确保所有元素都可见，可以添加一些边距
+x_min, x_max = ax.get_xlim()
+y_min, y_max = ax.get_ylim()
+x_margin = (x_max - x_min) * 0.1  # 10% 边距
+y_margin = (y_max - y_min) * 0.1  # 10% 边距
+ax.set_xlim(x_min - x_margin, x_max + x_margin)
+ax.set_ylim(y_min - y_margin, y_max + y_margin)
 
 plt.show()
 ```
@@ -315,7 +326,7 @@ if __name__ == "__main__":
     OUTPUT_DIR = '.temp/datasets/gps-geometry3k'
     RESULT_FILE = os.path.join(OUTPUT_DIR, 'processed_dataset.json')
     RESULT_JSONL = os.path.join(OUTPUT_DIR, 'processed_dataset.jsonl')
-    MAX_PROCESS = 800
+    MAX_PROCESS = 2000
 
 
     # processed_dataset = load_jsonl(dataset)

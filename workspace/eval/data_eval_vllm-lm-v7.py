@@ -627,6 +627,8 @@ if __name__ == "__main__":
     
     for key, value in results['average'].items():
         results['average'][key] /= args.epochs
+    
+    print_error(json.dumps(results, indent=4, ensure_ascii=False))
 
     with open(DONE_LOG, 'w') as f:
         f.write(f'{MODEL_PATH}\n')
