@@ -264,7 +264,7 @@ class SandboxCodeExecutor:
                 code = code.replace('plt.show()', f'plt.savefig("{self.next_file_path()}")')
 
             code_with_size_control = self.init_code + code
-            print(code_with_size_control)
+            # print(code_with_size_control)
 
             exit_code, stdout, stderr = run_python_code(code_with_size_control, working_dir=None)
 
