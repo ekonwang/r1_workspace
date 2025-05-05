@@ -117,11 +117,11 @@ class VLMEval:
                 
                 processed_messages.append({"role": role, "content": processed_content})
 
-            vllm_prompt = self.processor.apply_chat_template(
-                messages,
-                tokenize=False,
-                add_generation_prompt=True,
-            )
+        vllm_prompt = self.processor.apply_chat_template(
+            processed_messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
 
         return vllm_prompt
 

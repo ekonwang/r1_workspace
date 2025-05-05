@@ -21,7 +21,7 @@ from utils_data import load_custom_dataset, load_geometry3k_dataset, load_mmlu_d
 from utils_data import *
 from math_verify import ExprExtractionConfig, LatexExtractionConfig, StringExtractionConfig, parse, verify
 
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, AutoProcessor
 
 # --- v5: append the mathvista and olympiadbench benchmarks --- #
 # --- v6: change the maxlen params for pass@1 --- #
@@ -37,6 +37,7 @@ class VLMEval:
         gpu_memory_utilization: float = 0.9,
         max_model_len: int = MAXLEN * 2,
         dtype: str = "bfloat16",
+        vl_model: bool = False,
         **kwargs
     ):
         """
@@ -69,32 +70,74 @@ class VLMEval:
             max_tokens=MAXLEN
         )
 
-        self.processor = AutoTokenizer.from_pretrained(model_name)
+        if vl_model:
+            self.processor = AutoProcessor.from_pretrained(model_name)
+        else:
+            self.processor = AutoTokenizer.from_pretrained(model_name)
+
     
     def _encode_image_to_base64(self, image_path: str) -> str:
         """Convert an image to base64 string."""
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode("utf-8")
     
-    def _prepare_messages(self, messages: List[Dict]) -> str:
+    def _prepare_messages(self, messages: List[Dict]) -> List[Dict]:
         """
-        Process the message list to handle image inputs and format for Qwen-2.5-Instruct.
+        Process the message list to handle image inputs.
         
         Args:
             messages: List of message dictionaries with role and content
             
         Returns:
-            Processed prompt string ready for the model
+            Processed messages ready for the model
         """
-        # Use the processor to apply the chat template
+        processed_messages = []
+        
+        for message in messages:
+            role = message["role"]
+            content = message["content"]
+            
+            if isinstance(content, str):
+                # Simple text message
+                processed_messages.append({"role": role, "content": content})
+            else:
+                # Mixed content (text and images)
+                processed_content = []
+                
+                for item in content:
+                    if item["type"] == "text":
+                        processed_content.append({"type": "text", "text": item["text"]})
+                    elif item["type"] == "image":
+                        # Handle image - could be a path, base64 string, or PIL Image
+                        if "image_path" in item:
+                            image_data = self._encode_image_to_base64(item["image_path"])
+                            processed_content.append({
+                                "type": "image", 
+                                "image_url": f"data:image/jpeg;base64,{image_data}"
+                            })
+                        elif "image_url" in item:
+                            processed_content.append({"type": "image", "image_url": item["image_url"]})
+                        elif "image" in item and isinstance(item["image"], Image.Image):
+                            # Handle PIL Image
+                            buffered = BytesIO()
+                            item["image"].save(buffered, format="JPEG")
+                            img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                            processed_content.append({
+                                "type": "image", 
+                                "image_url": f"data:image/jpeg;base64,{img_str}"
+                            })
+                
+                processed_messages.append({"role": role, "content": processed_content})
+
         vllm_prompt = self.processor.apply_chat_template(
-            messages,
+            processed_messages,
             tokenize=False,
             add_generation_prompt=True,
         )
-        
+
         return vllm_prompt
     
+
     def chat_vlm(
         self, 
         prompts: List[str],
@@ -113,8 +156,8 @@ class VLMEval:
         if sampling_params is None:
             sampling_params = self.default_sampling_params
         
-        if not isinstance(prompts, str):
-            prompts = [self._prepare_messages(prompt) for prompt in prompts]
+
+        prompts = [self._prepare_messages(prompt) for prompt in prompts]
 
         # Generate response using vllm
         outputs = self.llm.generate(
@@ -531,14 +574,15 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, required=True, default='.temp/models/Qwen_Qwen2.5-3B-Instruct')
-    parser.add_argument("--output_path", type=str, default='.temp/outputs_v7')
+    parser.add_argument("--output_path", type=str, default='.temp/outputs_v7_vl')
     parser.add_argument("--dataset_path", type=str, default='Geomverse-D2')
     parser.add_argument("--verbose", action='store_true', help='output verbose info for debug.')
     parser.add_argument("--epochs", type=int, default=3)
     return parser.parse_args()
 
 
-if __name__ == "__main__":
+
+def main():
     args = parse_args()
     # Qwen-2.5-Instruct evaluation
     MODEL_PATH = args.model_path  # Use the correct path for Qwen-2.5-Instruct
@@ -639,4 +683,30 @@ if __name__ == "__main__":
         f.write(json.dumps(results, indent=4, ensure_ascii=False))
 
     del vlm_evaluator
-    
+
+
+if __name__ == "__main__":
+    # main()
+    vlm_evaluator = VLMEval(
+        model_name='',
+        tensor_parallel_size=torch.cuda.device_count(),
+        # tensor_parallel_size=2,
+        gpu_memory_utilization=0.9
+    )
+    vlm_evaluator.chat_vlm(
+        [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Please describe the image in detail."
+                    },
+                    {
+                        "type": "image",
+                        "image_path": ".temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/TRAIN_MIX_1/images/1.jpeg"
+                    }
+                ]
+            }
+        ]
+    )
