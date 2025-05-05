@@ -22,6 +22,7 @@ from utils_data import *
 from math_verify import ExprExtractionConfig, LatexExtractionConfig, StringExtractionConfig, parse, verify
 
 from transformers import AutoTokenizer, AutoProcessor
+from qwen_vl_utils import process_vision_info
 
 # --- v5: append the mathvista and olympiadbench benchmarks --- #
 # --- v6: change the maxlen params for pass@1 --- #
@@ -37,7 +38,7 @@ class VLMEval:
         gpu_memory_utilization: float = 0.9,
         max_model_len: int = MAXLEN * 2,
         dtype: str = "bfloat16",
-        vl_model: bool = False,
+        vl_model: bool = True,
         **kwargs
     ):
         """
@@ -53,15 +54,6 @@ class VLMEval:
         """
         self.model_name = model_name
         
-        # Initialize vllm model with tensor parallelism
-        self.llm = LLM(
-            model=model_name,
-            tensor_parallel_size=tensor_parallel_size,
-            gpu_memory_utilization=gpu_memory_utilization,
-            max_model_len=max_model_len,
-            dtype=dtype,
-            **kwargs
-        )
         
         # Default sampling parameters
         self.default_sampling_params = SamplingParams(
@@ -69,10 +61,30 @@ class VLMEval:
             top_p=1.0,
             max_tokens=MAXLEN
         )
+        self.vl_model = vl_model
 
-        if vl_model:
+        if self.vl_model:
             self.processor = AutoProcessor.from_pretrained(model_name)
+            # Initialize vllm model with tensor parallelism
+            self.llm = LLM(
+                model=model_name,
+                tensor_parallel_size=tensor_parallel_size,
+                gpu_memory_utilization=gpu_memory_utilization,
+                limit_mm_per_prompt={"image": 10, "video": 10},
+                max_model_len=max_model_len,
+                dtype=dtype,
+                **kwargs
+            )
         else:
+            # Initialize vllm model with tensor parallelism
+            self.llm = LLM(
+                model=model_name,
+                tensor_parallel_size=tensor_parallel_size,
+                gpu_memory_utilization=gpu_memory_utilization,
+                max_model_len=max_model_len,
+                dtype=dtype,
+                **kwargs
+            )
             self.processor = AutoTokenizer.from_pretrained(model_name)
 
     
@@ -113,29 +125,32 @@ class VLMEval:
                             image_data = self._encode_image_to_base64(item["image_path"])
                             processed_content.append({
                                 "type": "image", 
-                                "image_url": f"data:image/jpeg;base64,{image_data}"
+                                "image_url": f"data:image/jpeg;base64,{image_data}",
+                                "min_pixels": 224 * 224,
+                                "max_pixels": 1280 * 28 * 28,
                             })
-                        elif "image_url" in item:
-                            processed_content.append({"type": "image", "image_url": item["image_url"]})
-                        elif "image" in item and isinstance(item["image"], Image.Image):
-                            # Handle PIL Image
-                            buffered = BytesIO()
-                            item["image"].save(buffered, format="JPEG")
-                            img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-                            processed_content.append({
-                                "type": "image", 
-                                "image_url": f"data:image/jpeg;base64,{img_str}"
-                            })
+                        else:
+                            raise ValueError('No image detected')
                 
                 processed_messages.append({"role": role, "content": processed_content})
-
-        vllm_prompt = self.processor.apply_chat_template(
-            processed_messages,
-            tokenize=False,
-            add_generation_prompt=True,
+    
+        vllm_input = self.processor.apply_chat_template(
+            processed_messages, tokenize=False, add_generation_prompt=True,
         )
+        if self.vl_model:
+            image_inputs, video_inputs, video_kwargs = process_vision_info(processed_messages, return_video_kwargs=True)
+            mm_data = {}
+            mm_data["image"] = image_inputs
+            llm_inputs = {
+                "prompt": vllm_input,
+                "multi_modal_data": mm_data,
+                # # FPS will be returned in video_kwargs
+                # "mm_processor_kwargs": video_kwargs,
+            }
+            return llm_inputs
+        else:
+            return vllm_input
 
-        return vllm_prompt
     
 
     def chat_vlm(
@@ -687,14 +702,16 @@ def main():
 
 if __name__ == "__main__":
     # main()
+
     vlm_evaluator = VLMEval(
-        model_name='',
+        model_name='.temp/models/Qwen_Qwen2.5-VL-3B-Instruct',
         tensor_parallel_size=torch.cuda.device_count(),
         # tensor_parallel_size=2,
         gpu_memory_utilization=0.9
     )
-    vlm_evaluator.chat_vlm(
-        [
+
+    def pack_image_path(image_path=".temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/TRAIN_MIX_1/images/1.jpeg"):
+        test_input = [
             {
                 "role": "user",
                 "content": [
@@ -704,9 +721,12 @@ if __name__ == "__main__":
                     },
                     {
                         "type": "image",
-                        "image_path": ".temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/TRAIN_MIX_1/images/1.jpeg"
+                        "image_path": image_path
                     }
                 ]
             }
         ]
-    )
+        return test_input
+    
+    results = vlm_evaluator.chat_vlm([pack_image_path()])
+    print(results[0])
