@@ -122,6 +122,7 @@ def json_print(data):
 def multithreading(func, thread_num=8, data=None):
     with ThreadPoolExecutor(max_workers=thread_num) as executor:
         executor.map(func, data)
+
     
 if __name__ == '__main__':
     # pbar = mk_len_pbar(total=100, description='test')

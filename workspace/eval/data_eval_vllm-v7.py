@@ -23,6 +23,7 @@ from math_verify import ExprExtractionConfig, LatexExtractionConfig, StringExtra
 
 from transformers import AutoTokenizer, AutoProcessor
 from qwen_vl_utils import process_vision_info
+# from 
 
 # --- v5: append the mathvista and olympiadbench benchmarks --- #
 # --- v6: change the maxlen params for pass@1 --- #
@@ -128,6 +129,15 @@ class VLMEval:
                                 "image_url": f"data:image/jpeg;base64,{image_data}",
                                 "min_pixels": 224 * 224,
                                 "max_pixels": 1280 * 28 * 28,
+                            })
+                        elif "image" in item and isinstance(item["image"], Image.Image):
+                            # Handle PIL Image
+                            buffered = BytesIO()
+                            item["image"].save(buffered, format="JPEG")
+                            img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+                            processed_content.append({
+                                "type": "image", 
+                                "image_url": f"data:image/jpeg;base64,{img_str}"
                             })
                         else:
                             raise ValueError('No image detected')
@@ -415,15 +425,24 @@ D. {example["choices"][3]}
 
 
 def _eval_geomverse_(example: dict):
-    QUESTION_TEMPLATE = "{Question}  Output the thinking process in <think> </think> and final answer (number) in <answer> </answer> tags. You have a coin flip decision to make, whether to edit the tikz code to construct auxiliary lines in the thinking process, which should be marked with <auxiliary> </auxiliary> tags.\n\n\n"\
-        "Here is the tikz code for the geometry problem:```\n{tikz}\n```"
+    QUESTION_TEMPLATE = "{Question}  Output the thinking process in <think> </think> and final answer (number) in <answer> </answer> tags."\
+        "Here is the diagram for the geometry problem."
 
     def make_conversation_image(example):
         return {
             "prompt": [
                 {
                     "role": "user",
-                    "content": QUESTION_TEMPLATE.format(Question=example["problem"], tikz=example["geometry"])
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": QUESTION_TEMPLATE.format(Question=example["problem"])
+                        },
+                        {
+                            "type": "image",
+                            "image_path": 
+                        }
+                    ]
                 },
             ],
         }
@@ -586,6 +605,57 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
     return result_dict
 
 
+def debug_test():
+    vlm_evaluator = VLMEval(
+        model_name='.temp/models/Qwen_Qwen2.5-VL-3B-Instruct',
+        tensor_parallel_size=torch.cuda.device_count(),
+        # tensor_parallel_size=2,
+        gpu_memory_utilization=0.9
+    )
+
+    def pack_image_path(image_path=".temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/TRAIN_MIX_1/images/1.jpeg"):
+        test_input = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Please describe the image in detail."
+                    },
+                    {
+                        "type": "image",
+                        "image_path": image_path
+                    }
+                ]
+            }
+        ]
+        return test_input
+
+    def pack_image_obj(image_path=".temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/TRAIN_MIX_1/images/1.jpeg"):
+        image = Image.open(image_path)
+        test_input = [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "Please describe the image in detail."
+                    },
+                    {
+                        "type": "image",
+                        "image": image
+                    }
+                ]
+            }
+        ]
+        return test_input
+    
+    # results = vlm_evaluator.chat_vlm([pack_image_path()])
+    # print(results[0])
+    results = vlm_evaluator.chat_vlm([pack_image_obj()])
+    print(results[0])
+
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_path", type=str, required=True, default='.temp/models/Qwen_Qwen2.5-3B-Instruct')
@@ -699,34 +769,6 @@ def main():
 
     del vlm_evaluator
 
-
 if __name__ == "__main__":
-    # main()
-
-    vlm_evaluator = VLMEval(
-        model_name='.temp/models/Qwen_Qwen2.5-VL-3B-Instruct',
-        tensor_parallel_size=torch.cuda.device_count(),
-        # tensor_parallel_size=2,
-        gpu_memory_utilization=0.9
-    )
-
-    def pack_image_path(image_path=".temp/datasets/GeomVerse/TRAIN/TRAIN_MIX/TRAIN_MIX_1/images/1.jpeg"):
-        test_input = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "text",
-                        "text": "Please describe the image in detail."
-                    },
-                    {
-                        "type": "image",
-                        "image_path": image_path
-                    }
-                ]
-            }
-        ]
-        return test_input
-    
-    results = vlm_evaluator.chat_vlm([pack_image_path()])
-    print(results[0])
+    main()
+    debug_test()
