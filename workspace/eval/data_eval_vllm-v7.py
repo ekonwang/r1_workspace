@@ -465,7 +465,7 @@ def _eval_geomverse_(example: dict):
                         },
                         {
                             "type": "image",
-                            "image": 
+                            "image": example['image']
                         }
                     ]
                 },
@@ -605,14 +605,26 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
     replies = vlm_evaluator.chat_vlm(prompts)
     for i in range(len(dataset)):
         for j in range(bon_num):
-            if cal_reward(bon_replies[i * bon_num + j], processed_examples[i]['solution']) == 1.0:
+            res = 0.0
+            try:
+                res = cal_reward(bon_replies[i * bon_num + j], processed_examples[i]['solution'])
+            except Exception as e:
+                print_error(f'{e}')
+                continue
+            if res == 1.0:
                 tot_acc['bon'] += 1
                 break
-        if cal_reward(replies[i], processed_examples[i]['solution']) == 1.0:
+        res = 0.0
+        try:
+            res = cal_reward(replies[i], processed_examples[i]['solution'])
+        except Exception as e:
+            print_error(f'{e}')
+            pass
+        if res == 1.0:
             tot_acc['reward'] += 1
         
         all_eval_data.append({
-            'prompt': example["prompt"],
+            # 'prompt': example["prompt"],
             'solution': processed_examples[i]['solution'],
             "bon_replies": bon_replies[i * bon_num: (i + 1) * bon_num],
             "reply": replies[i],
