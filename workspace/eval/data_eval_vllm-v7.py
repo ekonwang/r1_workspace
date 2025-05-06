@@ -133,6 +133,10 @@ class VLMEval:
                         elif "image" in item and isinstance(item["image"], Image.Image):
                             # Handle PIL Image
                             buffered = BytesIO()
+                            # Convert RGBA to RGB before saving as JPEG
+                            if item["image"].mode == 'RGBA':
+                                item["image"] = item["image"].convert('RGB')
+                            # JPEG save image
                             item["image"].save(buffered, format="JPEG")
                             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
                             processed_content.append({
@@ -587,7 +591,8 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
     bon_prompts = []
     prompts = []
     processed_examples = []
-    for element in mk_pbar(dataset, description='Preprocessing'):
+    dataset = [d for d in dataset]
+    for element in mk_pbar(dataset):
         example, cal_reward = eval_func(element)
         processed_examples.append(example)
         prompts.append(example['prompt'])
