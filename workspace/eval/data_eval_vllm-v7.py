@@ -675,6 +675,7 @@ def parse_args():
 
 
 def main():
+    global vlm_evaluator
     args = parse_args()
     # Qwen-2.5-Instruct evaluation
     MODEL_PATH = args.model_path  # Use the correct path for Qwen-2.5-Instruct
@@ -778,4 +779,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-    debug_test()
+    # debug_test()
