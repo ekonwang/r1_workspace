@@ -137,7 +137,9 @@ class VLMEval:
                             img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
                             processed_content.append({
                                 "type": "image", 
-                                "image_url": f"data:image/jpeg;base64,{img_str}"
+                                "image_url": f"data:image/jpeg;base64,{img_str}",
+                                "min_pixels": 224 * 224,
+                                "max_pixels": 1280 * 28 * 28,
                             })
                         else:
                             raise ValueError('No image detected')
@@ -307,8 +309,8 @@ D. {example["choices"][3]}
 
 
 def _eval_geometry3k_(example: dict):
-    QUESTION_TEMPLATE = "{problem}  Output the thinking process in <think> </think> and final answer (the option letter) in <answer> </answer> tags. You have a coin flip decision to make, whether to edit the line instances to construct auxiliary lines in the thinking process, which should be marked with <auxiliary> </auxiliary> tags.\n\n\n"\
-        "Here is the logic form for the geometry problem:```\n{logic_form}\n```"
+    QUESTION_TEMPLATE = "{problem}  Output the thinking process in <think> </think> and final answer (the option letter) in <answer> </answer> tags."\
+        "Here is the diagram for the geometry problem."
 
     def make_conversation_image(example):
         problem = f"""
@@ -319,15 +321,20 @@ B. {example["choices"][1]}
 C. {example["choices"][2]}
 D. {example["choices"][3]}
 """
-        logic_form = "\n".join(example["diagram_logic_form"]) + "\n"
-        logic_form += "\n".join(example["dissolved_text_logic_form"])
-        logic_form += "\nThe line instances are: " + ", ".join(example["line_instances"])
-
         return {
             "prompt": [
                 {
                     "role": "user",
-                    "content": QUESTION_TEMPLATE.format(problem=problem, logic_form=logic_form)
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": QUESTION_TEMPLATE.format(problem=problem)
+                        },
+                        {
+                            "type": "image",
+                            "image": example['image']
+                        }
+                    ]
                 },
             ],
         }
@@ -440,7 +447,7 @@ def _eval_geomverse_(example: dict):
                         },
                         {
                             "type": "image",
-                            "image_path": 
+                            "image": example['image']
                         }
                     ]
                 },
