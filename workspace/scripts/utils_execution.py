@@ -188,7 +188,7 @@ def run_python_code(code, working_dir=None):
 class SandboxCodeExecutor:
     def __init__(
         self, 
-        working_dir: str = "",
+        working_dir: str = os.path.join(os.path.dirname(__file__), '.temp/sandbox_code_executor'),
         use_vision_tools: bool = False,
         ):
         self.working_dir = working_dir

@@ -7,6 +7,8 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from rich.progress import track, Progress
 from time import sleep
+from utils_execution import SandboxCodeExecutor
+from PIL import Image
 
 # llm_config={"cache_seed": None, "config_list": [{"model": "deepseek-ai/DeepSeek-R1-Distill-Qwen-7B", "temperature": 0.0, "api_key": "sk-gjezftinzvhzoogekwilcnydixgooycpezqemudmnttqbycj", "base_url": "https://api.siliconflow.cn/v1"}]}
 llm_config={"cache_seed": None, "config_list": [{"model": "Pro/deepseek-ai/DeepSeek-V3", "temperature": 0.0, "api_key": "sk-gjezftinzvhzoogekwilcnydixgooycpezqemudmnttqbycj", "base_url": "https://api.siliconflow.cn/v1"}]}
@@ -123,6 +125,17 @@ def multithreading(func, thread_num=8, data=None):
     with ThreadPoolExecutor(max_workers=thread_num) as executor:
         executor.map(func, data)
 
+def code_to_image(code: str):
+    executor = SandboxCodeExecutor()
+    results = executor.execute(code)
+    if results[0]:
+        raise Exception(f'{results[1]}')
+
+    results = results[2]
+    image_path = results[0]
+    image = Image.open(image_path)
+    return image
+
     
 if __name__ == '__main__':
     # pbar = mk_len_pbar(total=100, description='test')
@@ -133,16 +146,21 @@ if __name__ == '__main__':
     #     # pbar.track(description=f'test: {i}')
     #     time.sleep(0.1)
 
-    from rich.progress import Progress
-    import time
+    # from rich.progress import Progress
+    # import time
 
-    with Progress() as progress:
-        # Create a task with an initial description
-        task_id = progress.add_task("[red]Processing...", total=100)
+    # with Progress() as progress:
+    #     # Create a task with an initial description
+    #     task_id = progress.add_task("[red]Processing...", total=100)
 
-        for i in range(100):
-            time.sleep(0.05)  # Simulate work
-            if i == 50:
-                # Update the description halfway
-                progress.update(task_id, description="[green]Halfway done!")
-            progress.update(task_id, advance=1)
+    #     for i in range(100):
+    #         time.sleep(0.05)  # Simulate work
+    #         if i == 50:
+    #             # Update the description halfway
+    #             progress.update(task_id, description="[green]Halfway done!")
+    #         progress.update(task_id, advance=1)
+
+    jsonl_data = load_jsonl('workspace/eval/temp-ob.jsonl')
+    data0 = jsonl_data[1]
+    image = code_to_image(data0['code'])
+    image.show()

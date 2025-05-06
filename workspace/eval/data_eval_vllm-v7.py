@@ -23,7 +23,7 @@ from math_verify import ExprExtractionConfig, LatexExtractionConfig, StringExtra
 
 from transformers import AutoTokenizer, AutoProcessor
 from qwen_vl_utils import process_vision_info
-# from 
+from utils import code_to_image, mk_pbar
 
 # --- v5: append the mathvista and olympiadbench benchmarks --- #
 # --- v6: change the maxlen params for pass@1 --- #
@@ -209,17 +209,26 @@ def _generate_model_name(model_name: str):
 
 
 def _eval_olympiadbench_(example: dict):
-    NUMERICAL_QUESTION = "{problem}  Output the thinking process in <think> </think> and final answer (the number) in <answer> </answer> tags. You have a coin flip decision to make, whether to edit the code to construct auxiliary lines in the thinking process, which should be marked with <auxiliary> </auxiliary> tags.\n\n\n"\
-        "Here is the python code for the geometry problem:\n```python\n{code}\n```"
+    NUMERICAL_QUESTION = "{problem}  Output the thinking process in <think> </think> and final answer (the number) in <answer> </answer> tags."\
+        "Here is the diagram for the geometry problem."
     
     def make_conversation_image(example):
         problem = example["question"]
-        prompt = NUMERICAL_QUESTION.format(problem=problem, code=example["code"])
+        prompt = NUMERICAL_QUESTION.format(problem=problem)
         return {
             "prompt": [
                 {
                     "role": "user",
-                    "content": prompt
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt  
+                        },
+                        {
+                            "type": "image",
+                            "image": code_to_image(example["code"])
+                        }
+                    ]
                 },
             ],
         }
@@ -252,11 +261,11 @@ def _eval_olympiadbench_(example: dict):
         
 
 def _eval_mathvista_(example: dict):
-    MULTI_CHOICE_QUESTION = "{problem}  Output the thinking process in <think> </think> and final answer (the option letter) in <answer> </answer> tags. You have a coin flip decision to make, whether to edit the code to construct auxiliary lines in the thinking process, which should be marked with <auxiliary> </auxiliary> tags.\n\n\n"\
-        "Here is the python code for the geometry problem:\n```python\n{code}\n```"
+    MULTI_CHOICE_QUESTION = "{problem}  Output the thinking process in <think> </think> and final answer (the option letter) in <answer> </answer> tags."\
+        "Here is the diagram for the geometry problem."
     
-    NUMERICAL_QUESTION = "{problem}  Output the thinking process in <think> </think> and final answer (the number) in <answer> </answer> tags. You have a coin flip decision to make, whether to edit the code to construct auxiliary lines in the thinking process, which should be marked with <auxiliary> </auxiliary> tags.\n\n\n"\
-        "Here is the python code for the geometry problem:\n```python\n{code}\n```"
+    NUMERICAL_QUESTION = "{problem}  Output the thinking process in <think> </think> and final answer (the number) in <answer> </answer> tags."\
+        "Here is the diagram for the geometry problem."
 
     def make_conversation_image(example):
 
@@ -268,17 +277,26 @@ A. {example["choices"][0]}
 B. {example["choices"][1]}
 C. {example["choices"][2]}
 D. {example["choices"][3]}
-    """
-            prompt = MULTI_CHOICE_QUESTION.format(problem=problem, code=example["code"])
+            """
+            prompt = MULTI_CHOICE_QUESTION.format(problem=problem)
         else:
             problem = example["question"]
-            prompt = NUMERICAL_QUESTION.format(problem=problem, code=example["code"])
+            prompt = NUMERICAL_QUESTION.format(problem=problem)
 
         return {
             "prompt": [
                 {
                     "role": "user",
-                    "content": prompt
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": prompt
+                        },
+                        {
+                            "type": "image",
+                            "image": code_to_image(example["code"])
+                        }
+                    ]
                 },
             ],
         }
@@ -447,7 +465,7 @@ def _eval_geomverse_(example: dict):
                         },
                         {
                             "type": "image",
-                            "image": example['image']
+                            "image": 
                         }
                     ]
                 },
@@ -569,7 +587,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
     bon_prompts = []
     prompts = []
     processed_examples = []
-    for element in dataset:
+    for element in mk_pbar(dataset, description='Preprocessing'):
         example, cal_reward = eval_func(element)
         processed_examples.append(example)
         prompts.append(example['prompt'])
