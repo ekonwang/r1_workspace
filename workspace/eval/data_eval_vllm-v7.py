@@ -321,12 +321,12 @@ D. {example["choices"][3]}
                 reward = 1.0
             
             # 选择题
-            if reward == 0.0 and content_match is None:
-                student_answer = content.strip().split('\n')[-1]
-                # split the answer by ' ' and '.'
-                student_answer_list = student_answer.replace('.', ' ').split()
-                if ground_truth in student_answer_list:
-                    reward = 1.0
+            # if reward == 0.0 and content_match is None:
+            #     student_answer = content.strip().split('\n')[-1]
+            #     # split the answer by ' ' and '.'
+            #     student_answer_list = student_answer.replace('.', ' ').split()
+            #     if ground_truth in student_answer_list:
+            #         reward = 1.0
         except Exception:
             pass  # Continue to next verification method if this fails
 
@@ -384,12 +384,12 @@ D. {example["choices"][3]}
                 reward = 1.0
             
             # 选择题
-            if reward == 0.0 and content_match is None:
-                student_answer = content.strip().split('\n')[-1]
-                # split the answer by ' ' and '.'
-                student_answer_list = student_answer.replace('.', ' ').split()
-                if ground_truth in student_answer_list:
-                    reward = 1.0
+            # if reward == 0.0 and content_match is None:
+            #     student_answer = content.strip().split('\n')[-1]
+            #     # split the answer by ' ' and '.'
+            #     student_answer_list = student_answer.replace('.', ' ').split()
+            #     if ground_truth in student_answer_list:
+            #         reward = 1.0
         except Exception:
             pass  # Continue to next verification method if this fails
 

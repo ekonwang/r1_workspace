@@ -46,8 +46,10 @@ def snap_download_dataset(dataset_name):
 # snap_download_model("Qwen/Qwen2.5-1.5B-Instruct")
 # snap_download_model("OpenGVLab/InternVL2_5-8B")
 # snap_download_model("OpenRLHF/Llama-3-8b-rm-700k")
-snap_download_model("Qwen/Qwen2.5-VL-3B-Instruct")
-snap_download_model("Qwen/Qwen2.5-VL-7B-Instruct")
+# snap_download_model("Qwen/Qwen2.5-VL-3B-Instruct")
+# snap_download_model("Qwen/Qwen2.5-VL-7B-Instruct")
+snap_download_model("Qwen/Qwen2-VL-3B-Instruct")
+snap_download_model("Qwen/Qwen2-VL-7B-Instruct")
 
 # snap_download_dataset("FanqingM/MM-Eureka-Dataset")
 # snap_download_dataset("hiyouga/geometry3k")

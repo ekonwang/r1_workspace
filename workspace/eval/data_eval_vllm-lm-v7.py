@@ -510,7 +510,7 @@ def eval_dataset(dataset, output_path, verbose: bool = False, eval_func: Callabl
             tot_acc['reward'] += 1
         
         all_eval_data.append({
-            'prompt': example["prompt"],
+            'prompt': processed_examples[i]['prompt'],
             'solution': processed_examples[i]['solution'],
             "bon_replies": bon_replies[i * bon_num: (i + 1) * bon_num],
             "reply": replies[i],
