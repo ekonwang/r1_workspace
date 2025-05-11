@@ -13,6 +13,7 @@ MODEL=.temp/models/Qwen_Qwen2.5-3B-Instruct
 export RAY_MASTER_PORT=6379
 export REWARD_LOG_PATH="${OUTPUT_DIR}/reward.log"
 export WORKING_DIR=$PWD
+export PYTHONPATH=./workspace/reward:$PYTHONPATH
 export GC_LOG_PATH="${OUTPUT_DIR}/gc_reward_log.log"
 
 echo '' > ${REWARD_LOG_PATH}
